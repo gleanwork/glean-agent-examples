@@ -1,0 +1,22 @@
+[project]
+name = "glean-langchain-interop"
+version = "0.1.0"
+description = "Proof of concept for Glean-Langchain integration"
+requires-python = ">=3.13"
+readme = "README.md"
+dependencies = [
+    "langchain",
+    "langchain_openai",
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "requests",
+    "python-dotenv",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/glean_langchain_interop"]
