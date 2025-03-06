@@ -7,7 +7,7 @@ tasks:
   start:
     desc: Start the LangChain agent server
     cmds:
-      - '{{.PYTHON}} src/glean_langchain_interop/langchain_agent.py'
+      - '{{.PYTHON}} src/glean_langchain_interop/agent.py'
     
   install:
     desc: Install dependencies
