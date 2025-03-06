@@ -56,8 +56,19 @@ class GleanSearchRetriever(BaseRetriever):
                 "query": query,
                 "pageSize": self.max_results
             }
-            breakpoint()
-            search_results = self._client.post("search", json=payload)
+            
+            # First try with json parameter
+            # try:
+            #     search_results = self._client.post("search", json=payload)
+            # except Exception as e:
+            #     print(f"Error with JSON format: {str(e)}")
+            #     # If that fails, try with data parameter and stringified JSON
+            import json
+            search_results = self._client.post(
+                "search", 
+                data=json.dumps(payload),
+                headers={"Content-Type": "application/json"}
+            )
             
             documents = []
             

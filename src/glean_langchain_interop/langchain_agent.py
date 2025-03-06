@@ -18,12 +18,12 @@ glean_retriever = GleanSearchRetriever(
     subdomain=os.getenv("GLEAN_SUBDOMAIN"),
     api_key=os.getenv("GLEAN_API_KEY"),
     max_results=5,
-    act_as=os.getenv("GLEAN_ACT_AS", "steve.calvert@glean.com")
+    act_as=os.getenv("GLEAN_ACT_AS")
 )
 
 def glean_search(query: str) -> str:
     """Search for information in Glean."""
-    docs = glean_retriever.get_relevant_documents(query)
+    docs = glean_retriever.invoke(query)
     
     if not docs:
         return "No relevant documents found in Glean."
@@ -72,7 +72,7 @@ agent = (
     | OpenAIFunctionsAgentOutputParser()
 )
 
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=os.getenv("VERBOSE") == "true")
 
 app = FastAPI(title="Langchain Agent Protocol Server")
 

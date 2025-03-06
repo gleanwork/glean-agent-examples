@@ -39,16 +39,10 @@ class GleanSession:
         api_root: Literal[None, "index", "client"] = None,
     ):
 
-        # create a new session
         self.session = requests.Session()
-
-        # set the session timeout
         self.session.timeout = timeout
-
-        # set the auth headers for the session
         self.session.headers = auth.get_headers()
 
-        # set the base URL based on the API set
         if api_root is None or api_root == "client":
             self.base_url = auth.get_base_url("rest/api")
         else:
@@ -68,7 +62,6 @@ class GleanSession:
 
         body = None
 
-        # handle non-json responses
         try:
             body = response.json()
         except JSONDecodeError:
@@ -87,9 +80,9 @@ class GleanSession:
         Returns:
             Dict containing the API response
         """
-        breakpoint()
         url = f"{self.base_url}/{endpoint}"
         response = self.session.post(url, **kwargs)
+
         return self.parse_response(response)
 
     def get(self, endpoint, **kwargs):
@@ -106,4 +99,5 @@ class GleanSession:
 
         url = f"{self.base_url}/{endpoint}"
         response = self.session.get(url, **kwargs)
+
         return self.parse_response(response)
