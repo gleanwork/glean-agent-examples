@@ -1,0 +1,59 @@
+version: '3'
+
+vars:
+  PYTHON: .venv/bin/python
+
+tasks:
+  start:
+    desc: Start the LangChain agent server
+    cmds:
+      - '{{.PYTHON}} src/glean_langchain_interop/langchain_agent.py'
+    
+  install:
+    desc: Install dependencies
+    cmds:
+      - uv pip install -e .
+      
+  ngrok:
+    desc: Start ngrok tunnel to expose the LangChain agent server
+    cmds:
+      - ngrok http 8000
+      
+  dev:
+    desc: Start both the server and ngrok in separate terminals
+    cmds:
+      - task: start
+        silent: true
+      - task: ngrok
+        silent: true
+        
+  test:
+    desc: Test the LangChain agent with a query
+    cmds:
+      - '{{.PYTHON}} test_agent.py {{.CLI_ARGS}}'
+    summary: |
+      Test the LangChain agent with a query.
+      
+      Usage:
+        task test -- "Your query here"
+      
+      Example:
+        task test -- "What information can you find about AI in Glean?"
+        
+  interactive:
+    desc: Start an interactive test session with the LangChain agent
+    cmds:
+      - '{{.PYTHON}} interactive_test.py'
+      
+  curl:
+    desc: Test the LangChain agent using curl
+    cmds:
+      - ./curl_example.sh {{.CLI_ARGS}}
+    summary: |
+      Test the LangChain agent using curl.
+      
+      Usage:
+        task curl -- "Your query here"
+      
+      Example:
+        task curl -- "What information can you find about AI in Glean?"

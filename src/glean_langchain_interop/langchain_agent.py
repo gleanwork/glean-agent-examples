@@ -3,27 +3,24 @@ from langchain.agents.format_scratchpad import format_to_openai_function_message
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.tools.render import format_tool_to_openai_function
-from fastapi import FastAPI, Request
+from langchain_core.utils.function_calling import convert_to_openai_function
+from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 import uvicorn
 import os
 
-# Import our Glean retriever
-from glean_langchain_interop.glean_retriever import GleanRetriever
+from glean_langchain_interop.retrievers import GleanSearchRetriever
 
-# Load environment variables
 load_dotenv()
 
-# Initialize the retriever connecting to the real Glean API
-glean_retriever = GleanRetriever(
-    glean_api_url=os.getenv("GLEAN_API_URL"),
+glean_retriever = GleanSearchRetriever(
+    subdomain=os.getenv("GLEAN_SUBDOMAIN"),
     api_key=os.getenv("GLEAN_API_KEY"),
-    max_results=5
+    max_results=5,
+    act_as=os.getenv("GLEAN_ACT_AS", "steve.calvert@glean.com")
 )
 
-# Create a tool that uses the retriever
 def glean_search(query: str) -> str:
     """Search for information in Glean."""
     docs = glean_retriever.get_relevant_documents(query)
@@ -31,7 +28,6 @@ def glean_search(query: str) -> str:
     if not docs:
         return "No relevant documents found in Glean."
     
-    # Format results for display
     results_text = "\n\n".join([
         f"**{doc.metadata.get('title', 'Untitled')}**\n"
         f"{doc.page_content}\n"
@@ -41,11 +37,9 @@ def glean_search(query: str) -> str:
     
     return f"Found {len(docs)} relevant documents in Glean:\n\n{results_text}"
 
-# Define input schema for the tool
 class GleanSearchInput(BaseModel):
     query: str = Field(description="The search query to submit to Glean")
 
-# Create Tools
 tools = [
     Tool(
         name="glean_search",
@@ -55,14 +49,13 @@ tools = [
     )
 ]
 
-# Set up the agent
-llm = ChatOpenAI(model="gpt-4")
+llm = ChatOpenAI(model="gpt-4o-mini")
 llm_with_tools = llm.bind(
-    functions=[format_tool_to_openai_function(t) for t in tools]
+    functions=[convert_to_openai_function(t) for t in tools]
 )
 
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a helpful assistant that can use tools to retrieve information from Glean."),
+    ("system", "You are a helpful assistant that can use tools to retrieve information from Glean. When asked a question, first search Glean for relevant information before providing an answer."),
     MessagesPlaceholder(variable_name="chat_history"),
     ("human", "{input}"),
     MessagesPlaceholder(variable_name="agent_scratchpad"),
@@ -81,7 +74,6 @@ agent = (
 
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-# Set up FastAPI server with LAP endpoints
 app = FastAPI(title="Langchain Agent Protocol Server")
 
 class AgentInput(BaseModel):
@@ -94,11 +86,23 @@ class AgentResponse(BaseModel):
 
 @app.post("/runs", response_model=AgentResponse)
 async def create_run(agent_input: AgentInput):
-    result = agent_executor.invoke({"input": agent_input.input})
-    return AgentResponse(
-        output=result["output"],
-        conversation_id=agent_input.conversation_id
-    )
+    """Execute a LangChain agent with the given input."""
+    try:
+        result = agent_executor.invoke({"input": agent_input.input})
+        return AgentResponse(
+            output=result["output"],
+            conversation_id=agent_input.conversation_id
+        )
+    except Exception as e:
+        print(f"Error executing agent: {str(e)}")
+        return AgentResponse(
+            output="I encountered an error while processing your request. Please try again or contact support if the issue persists.",
+            conversation_id=agent_input.conversation_id
+        )
 
 if __name__ == "__main__":
+    print("Starting LangChain Agent server with Glean integration...")
+    print(f"Glean Subdomain: {os.getenv('GLEAN_SUBDOMAIN')}")
+    print(f"OpenAI API Key configured: {'Yes' if os.getenv('OPENAI_API_KEY') else 'No'}")
+    
     uvicorn.run(app, host="0.0.0.0", port=8000)
