@@ -1,0 +1,53 @@
+version: '3'
+
+vars:
+  PYTHON: .venv/bin/python
+
+tasks: 
+  install:
+    desc: Install dependencies
+    cmds:
+      - uv sync
+ 
+  serve:
+    desc: Start the agent server
+    silent: true
+    cmds:
+      - |
+        {{.PYTHON}} -m glean_agent_examples.server
+    summary: |
+      Start the agent server that handles all agent requests.
+      
+      Usage:
+        task serve
+          
+  run:
+    desc: Run an agent with a query
+    silent: true
+    cmds:
+      - |
+        {{.PYTHON}} -m glean_agent_examples.runner run {{.CLI_ARGS}}
+    summary: |
+      Run an agent with a query.
+      
+      Usage:
+        task run -- <agent_name> "Your query here"
+      
+      Example:
+        task run -- langchain_glean_chat "What information can you find about AI in Glean?"
+        task run -- langgraph_glean_search "what are the company holidays"
+  
+  list:
+    desc: List all available agents
+    silent: true
+    cmds:
+      - |
+        echo "Available agents:"
+        {{.PYTHON}} -m glean_agent_examples.runner list | grep -v "Available Agents:" | sed 's/^/- /'
+    summary: |
+      List all available agents.
+      
+      Usage:
+        task list
+      
+      This will show all available agents that can be used with the run task.

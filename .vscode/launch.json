@@ -1,0 +1,41 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug Test Agent",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/tests/test_agent.py",
+        "args": ["What information can you find about machine learning in Glean?"],
+        "python": "${workspaceFolder}/.venv/bin/python",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/../langchain-glean"
+        },
+        "justMyCode": false
+      },
+      {
+        "name": "Debug Agent Module",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "glean_agent_examples.agent",
+        "python": "${workspaceFolder}/.venv/bin/python",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/../langchain-glean"
+        },
+        "justMyCode": false
+      },
+      {
+        "name": "Debug Pytest",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": ["tests/", "-v"],
+        "python": "${workspaceFolder}/.venv/bin/python",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/../langchain-glean"
+        },
+        "justMyCode": false
+      }
+    ]
+  }
+  

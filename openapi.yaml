@@ -1,0 +1,53 @@
+openapi: 3.0.0
+info:
+  title: LangChain Agent API
+  description: API for calling LangChain agents from Glean
+  version: 0.1.0
+servers:
+  - url: https://your-ngrok-url.ngrok.io
+    description: LangChain Agent Server (replace with your actual ngrok URL)
+paths:
+  /runs:
+    post:
+      summary: Run a LangChain agent
+      description: Execute a LangChain agent with the given input
+      operationId: runAgent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentInput'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+        '400':
+          description: Bad request
+        '500':
+          description: Server error
+components:
+  schemas:
+    AgentInput:
+      type: object
+      required:
+        - input
+      properties:
+        input:
+          type: string
+          description: The natural language input to send to the agent
+        conversation_id:
+          type: string
+          description: Optional conversation ID for maintaining context
+    AgentResponse:
+      type: object
+      properties:
+        output:
+          type: string
+          description: The agent's response
+        conversation_id:
+          type: string
+          description: The conversation ID 
