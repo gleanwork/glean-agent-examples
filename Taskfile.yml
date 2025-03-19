@@ -2,11 +2,12 @@ version: '3'
 
 vars:
   PYTHON: .venv/bin/python
-  AGENT_TYPE: '{{.AGENT_TYPE | default "langchain"}}'
+  EXAMPLE: '{{.EXAMPLE | default "langchain"}}'
 
 tasks:
   start:
     desc: Start both the server and ngrok in separate terminals
+    silent: true
     cmds:
       - task: start:agent
         silent: true
@@ -16,27 +17,34 @@ tasks:
       Start both the agent server and ngrok in separate terminals.
       
       Usage:
-        task start AGENT_TYPE=<agent_type>
+        task start EXAMPLE=<example_name>
       
       Example:
-        task start AGENT_TYPE=langchain
-        task start AGENT_TYPE=langgraph
+        task start EXAMPLE=langchain
+        task start EXAMPLE=langgraph
         task start  # defaults to langchain
   
   start:agent:
     desc: Start the agent server
+    silent: true
     cmds:
-      - '{{.PYTHON}} src/glean_agent_examples/examples/{{.AGENT_TYPE}}/agent.py'
+      - |
+        IFS='/' read -r example_dir example_file <<< "{{.EXAMPLE}}"
+        if [ -z "$example_file" ]; then
+          example_file="agent"
+        fi
+        {{.PYTHON}} src/glean_agent_examples/examples/$example_dir/$example_file.py
     summary: |
-      Start the agent server for the specified agent type.
+      Start the agent server for the specified example.
       
       Usage:
-        task start:agent AGENT_TYPE=<agent_type>
+        task start:agent EXAMPLE=<directory>[/<file>]
       
       Example:
-        task start:agent AGENT_TYPE=langchain
-        task start:agent AGENT_TYPE=langgraph
-        task start:agent  # defaults to langchain
+        task start:agent EXAMPLE=langchain/agent
+        task start:agent EXAMPLE=langgraph/custom_agent
+        task start:agent EXAMPLE=langchain  # defaults to agent.py
+        task start:agent  # defaults to langchain/agent
     
   install:
     desc: Install dependencies
@@ -47,48 +55,109 @@ tasks:
     desc: Start ngrok tunnel to expose the LangChain agent server
     cmds:
       - ngrok http 8000    
+  
+  list:examples:
+    desc: List all available examples and how to use them
+    silent: true
+    cmds:
+      - |
+        # Define colors
+        GREEN="\033[0;32m"
+        YELLOW="\033[0;33m"
+        CYAN="\033[0;36m"
+        BOLD="\033[1m"
+        RESET="\033[0m"
+        
+        echo -e "${BOLD}Available Examples:${RESET}"
+        echo ""
+        for dir in src/glean_agent_examples/examples/*/; do
+          example=$(basename "$dir")
+          echo -e "${CYAN}$example:${RESET}"
+          find "$dir" -type f -not -name "__init__.py" -not -path "*/\.*" | sort | while read file; do
+            filename=$(basename "$file" .py)
+            echo -e "  ${YELLOW}- $filename${RESET}"
+          done
+          echo ""
+        done
+        echo -e "${BOLD}How to use examples:${RESET}"
+        echo -e "${BOLD}-------------------${RESET}"
+        echo -e "To run an example, use the format: ${CYAN}<directory>${RESET}/${YELLOW}<file>${RESET} (without extension)"
+        echo ""
+        echo -e "${BOLD}Examples:${RESET}"
+        echo -e "  task start:agent EXAMPLE=${CYAN}langchain${RESET}/${YELLOW}agent${RESET}"
+        echo -e "  task test EXAMPLE=${CYAN}langchain${RESET}/${YELLOW}agent${RESET} -- \"what are the company holidays\""
+        echo ""
+    summary: |
+      List all available examples and how to use them.
+      
+      Usage:
+        task list:examples
+      
+      This will show all available examples and instructions on how to use them
+      with the EXAMPLE parameter in other tasks.
         
   test:
     desc: Test the agent with a query
+    silent: true
     cmds:
-      - '{{.PYTHON}} tests/examples/{{.AGENT_TYPE}}/test_agent.py {{.CLI_ARGS}}'
+      - |
+        IFS='/' read -r example_dir example_file <<< "{{.EXAMPLE}}"
+        if [ -z "$example_file" ]; then
+          example_file="agent"
+        fi
+        {{.PYTHON}} tests/examples/$example_dir/test_$example_file.py {{.CLI_ARGS}}
     summary: |
       Test the agent with a query.
       
       Usage:
-        task test AGENT_TYPE=<agent_type> -- "Your query here"
+        task test EXAMPLE=<directory>[/<file>] -- "Your query here"
       
       Example:
-        task test AGENT_TYPE=langchain -- "What information can you find about AI in Glean?"
-        task test AGENT_TYPE=langgraph -- "what are the company holidays"
-        task test -- "What information can you find about AI in Glean?"  # defaults to langchain
+        task test EXAMPLE=langchain/agent -- "What information can you find about AI in Glean?"
+        task test EXAMPLE=langgraph/custom_agent -- "what are the company holidays"
+        task test EXAMPLE=langchain -- "What information can you find about AI in Glean?"  # defaults to agent
+        task test -- "What information can you find about AI in Glean?"  # defaults to langchain/agent
         
   interactive:
     desc: Start an interactive test session with the agent
+    silent: true
     cmds:
-      - '{{.PYTHON}} tests/examples/{{.AGENT_TYPE}}/test_interactive.py'
+      - |
+        IFS='/' read -r example_dir example_file <<< "{{.EXAMPLE}}"
+        if [ -z "$example_file" ]; then
+          example_file="agent"
+        fi
+        {{.PYTHON}} tests/examples/$example_dir/test_interactive_$example_file.py
     summary: |
       Start an interactive test session with the agent.
       
       Usage:
-        task interactive AGENT_TYPE=<agent_type>
+        task interactive EXAMPLE=<directory>[/<file>]
       
       Example:
-        task interactive AGENT_TYPE=langchain
-        task interactive AGENT_TYPE=langgraph
-        task interactive  # defaults to langchain
+        task interactive EXAMPLE=langchain/agent
+        task interactive EXAMPLE=langgraph/custom_agent
+        task interactive EXAMPLE=langchain  # defaults to agent
+        task interactive  # defaults to langchain/agent
       
   curl:
     desc: Test the agent using curl
+    silent: true
     cmds:
-      - ./tests/examples/{{.AGENT_TYPE}}/curl_example.sh {{.CLI_ARGS}}
+      - |
+        IFS='/' read -r example_dir example_file <<< "{{.EXAMPLE}}"
+        if [ -z "$example_file" ]; then
+          example_file="agent"
+        fi
+        ./tests/examples/$example_dir/curl_${example_file}.sh {{.CLI_ARGS}}
     summary: |
       Test the agent using curl.
       
       Usage:
-        task curl AGENT_TYPE=<agent_type> -- "Your query here"
+        task curl EXAMPLE=<directory>[/<file>] -- "Your query here"
       
       Example:
-        task curl AGENT_TYPE=langchain -- "What information can you find about AI in Glean?"
-        task curl AGENT_TYPE=langgraph -- "what are the company holidays"
-        task curl -- "What information can you find about AI in Glean?"  # defaults to langchain
+        task curl EXAMPLE=langchain/agent -- "What information can you find about AI in Glean?"
+        task curl EXAMPLE=langgraph/custom_agent -- "what are the company holidays"
+        task curl EXAMPLE=langchain -- "What information can you find about AI in Glean?"  # defaults to agent
+        task curl -- "What information can you find about AI in Glean?"  # defaults to langchain/agent
