@@ -2,7 +2,7 @@
 name = "glean-langchain-interop"
 version = "0.1.0"
 description = "Proof of concept for Glean-Langchain integration"
-requires-python = ">=3.13"
+requires-python = ">=3.9"
 readme = "README.md"
 dependencies = [
     "langchain",

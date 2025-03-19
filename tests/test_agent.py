@@ -55,7 +55,7 @@ def test_glean_directly():
     load_dotenv()
     
     subdomain = os.getenv("GLEAN_SUBDOMAIN")
-    api_key = os.getenv("GLEAN_API_KEY")
+    api_key = os.getenv("GLEAN_API_TOKEN")
     act_as = os.getenv("GLEAN_ACT_AS", "steve.calvert@glean.com")
     
     if not subdomain or not api_key:

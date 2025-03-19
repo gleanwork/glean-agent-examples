@@ -10,16 +10,12 @@ from dotenv import load_dotenv
 import uvicorn
 import os
 
-from glean_langchain_interop.retrievers import GleanSearchRetriever
+# from glean_langchain_interop.retrievers import GleanSearchRetriever
+from langchain_glean.retrievers import GleanSearchRetriever
 
 load_dotenv()
 
-glean_retriever = GleanSearchRetriever(
-    subdomain=os.getenv("GLEAN_SUBDOMAIN"),
-    api_key=os.getenv("GLEAN_API_KEY"),
-    max_results=5,
-    act_as=os.getenv("GLEAN_ACT_AS")
-)
+glean_retriever = GleanSearchRetriever()
 
 def glean_search(query: str) -> str:
     """Search for information in Glean."""
