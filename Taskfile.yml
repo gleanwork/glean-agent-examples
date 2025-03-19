@@ -120,25 +120,6 @@ tasks:
         task test EXAMPLE=langgraph/custom_agent -- "what are the company holidays"
         task test EXAMPLE=langchain -- "What information can you find about AI in Glean?"  # defaults to agent
         task test -- "What information can you find about AI in Glean?"  # defaults to langchain/agent
-        
-  interactive:
-    desc: Start an interactive test session with the agent
-    silent: true
-    cmds:
-      - |
-        {{.PARSE_EXAMPLE}}
-        {{.PYTHON}} tests/examples/$example_dir/test_interactive_$example_file.py
-    summary: |
-      Start an interactive test session with the agent.
-      
-      Usage:
-        task interactive EXAMPLE=<directory>[/<file>]
-      
-      Example:
-        task interactive EXAMPLE=langchain/agent
-        task interactive EXAMPLE=langgraph/custom_agent
-        task interactive EXAMPLE=langchain  # defaults to agent
-        task interactive  # defaults to langchain/agent
       
   curl:
     desc: Test the agent using curl
