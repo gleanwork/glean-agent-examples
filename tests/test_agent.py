@@ -5,13 +5,12 @@ import sys
 import os
 from dotenv import load_dotenv
 
-# Import the Glean client for direct testing
-from glean_langchain_interop.client import GleanAuth, GleanSession
+from glean_agent_examples.client import GleanAuth, GleanSession
 
 def test_agent(query):
     """Test the LangChain agent with a query."""
     url = "http://localhost:8000/runs"
-    
+
     payload = {
         "input": query,
         "conversation_id": "test-conversation"

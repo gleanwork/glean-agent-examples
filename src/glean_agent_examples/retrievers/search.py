@@ -3,7 +3,7 @@ from langchain_core.documents import Document
 from typing import List, Optional
 from pydantic import Field, PrivateAttr
 
-from glean_langchain_interop.client import GleanAuth, GleanSession
+from glean_agent_examples.client import GleanAuth, GleanSession
 
 class GleanSearchRetriever(BaseRetriever):
     """Retriever that uses Glean's search API via the Glean client."""

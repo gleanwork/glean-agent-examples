@@ -2,6 +2,6 @@
 
 __version__ = "0.1.0"
 
-from glean_langchain_interop.retrievers import GleanSearchRetriever
+from glean_agent_examples.retrievers import GleanSearchRetriever
 
 __all__ = ["GleanSearchRetriever"] 

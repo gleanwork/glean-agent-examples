@@ -245,7 +245,7 @@ wheels = [
 ]
 
 [[package]]
-name = "glean-langchain-interop"
+name = "glean-agent-examples"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

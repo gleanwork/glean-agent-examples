@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 import uvicorn
 import os
 
-# from glean_langchain_interop.retrievers import GleanSearchRetriever
+# from glean_agent_examples.retrievers import GleanSearchRetriever
 from langchain_glean.retrievers import GleanSearchRetriever
 
 load_dotenv()
