@@ -2,6 +2,7 @@ version: '3'
 
 vars:
   PYTHON: .venv/bin/python
+  AGENT_TYPE: '{{.AGENT_TYPE | default "langchain"}}'
 
 tasks:
   start:
@@ -11,11 +12,31 @@ tasks:
         silent: true
       - task: ngrok
         silent: true
+    summary: |
+      Start both the agent server and ngrok in separate terminals.
+      
+      Usage:
+        task start AGENT_TYPE=<agent_type>
+      
+      Example:
+        task start AGENT_TYPE=langchain
+        task start AGENT_TYPE=langgraph
+        task start  # defaults to langchain
   
   start:agent:
-    desc: Start the LangChain agent server
+    desc: Start the agent server
     cmds:
-      - '{{.PYTHON}} src/glean_agent_examples/langchain/agent.py'
+      - '{{.PYTHON}} src/glean_agent_examples/{{.AGENT_TYPE}}/agent.py'
+    summary: |
+      Start the agent server for the specified agent type.
+      
+      Usage:
+        task start:agent AGENT_TYPE=<agent_type>
+      
+      Example:
+        task start:agent AGENT_TYPE=langchain
+        task start:agent AGENT_TYPE=langgraph
+        task start:agent  # defaults to langchain
     
   install:
     desc: Install dependencies
@@ -28,32 +49,46 @@ tasks:
       - ngrok http 8000    
         
   test:
-    desc: Test the LangChain agent with a query
+    desc: Test the agent with a query
     cmds:
-      - '{{.PYTHON}} tests/langchain/test_agent.py {{.CLI_ARGS}}'
+      - '{{.PYTHON}} tests/{{.AGENT_TYPE}}/test_agent.py {{.CLI_ARGS}}'
     summary: |
-      Test the LangChain agent with a query.
+      Test the agent with a query.
       
       Usage:
-        task test -- "Your query here"
+        task test AGENT_TYPE=<agent_type> -- "Your query here"
       
       Example:
-        task test -- "What information can you find about AI in Glean?"
+        task test AGENT_TYPE=langchain -- "What information can you find about AI in Glean?"
+        task test AGENT_TYPE=langgraph -- "what are the company holidays"
+        task test -- "What information can you find about AI in Glean?"  # defaults to langchain
         
   interactive:
-    desc: Start an interactive test session with the LangChain agent
+    desc: Start an interactive test session with the agent
     cmds:
-      - '{{.PYTHON}} tests/langchain/test_interactive.py'
-      
-  curl:
-    desc: Test the LangChain agent using curl
-    cmds:
-      - ./tests/langchain/curl_example.sh {{.CLI_ARGS}}
+      - '{{.PYTHON}} tests/{{.AGENT_TYPE}}/test_interactive.py'
     summary: |
-      Test the LangChain agent using curl.
+      Start an interactive test session with the agent.
       
       Usage:
-        task curl -- "Your query here"
+        task interactive AGENT_TYPE=<agent_type>
       
       Example:
-        task curl -- "What information can you find about AI in Glean?"
+        task interactive AGENT_TYPE=langchain
+        task interactive AGENT_TYPE=langgraph
+        task interactive  # defaults to langchain
+      
+  curl:
+    desc: Test the agent using curl
+    cmds:
+      - ./tests/{{.AGENT_TYPE}}/curl_example.sh {{.CLI_ARGS}}
+    summary: |
+      Test the agent using curl.
+      
+      Usage:
+        task curl AGENT_TYPE=<agent_type> -- "Your query here"
+      
+      Example:
+        task curl AGENT_TYPE=langchain -- "What information can you find about AI in Glean?"
+        task curl AGENT_TYPE=langgraph -- "what are the company holidays"
+        task curl -- "What information can you find about AI in Glean?"  # defaults to langchain
