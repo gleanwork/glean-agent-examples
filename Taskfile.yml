@@ -5,9 +5,17 @@ vars:
 
 tasks:
   start:
+    desc: Start both the server and ngrok in separate terminals
+    cmds:
+      - task: start:agent
+        silent: true
+      - task: ngrok
+        silent: true
+  
+  start:agent:
     desc: Start the LangChain agent server
     cmds:
-      - '{{.PYTHON}} src/glean_agent_examples/agent.py'
+      - '{{.PYTHON}} src/glean_agent_examples/langchain/agent.py'
     
   install:
     desc: Install dependencies
@@ -17,20 +25,12 @@ tasks:
   ngrok:
     desc: Start ngrok tunnel to expose the LangChain agent server
     cmds:
-      - ngrok http 8000
-      
-  dev:
-    desc: Start both the server and ngrok in separate terminals
-    cmds:
-      - task: start
-        silent: true
-      - task: ngrok
-        silent: true
+      - ngrok http 8000    
         
   test:
     desc: Test the LangChain agent with a query
     cmds:
-      - '{{.PYTHON}} tests/test_agent.py {{.CLI_ARGS}}'
+      - '{{.PYTHON}} tests/langchain/test_agent.py {{.CLI_ARGS}}'
     summary: |
       Test the LangChain agent with a query.
       
@@ -43,12 +43,12 @@ tasks:
   interactive:
     desc: Start an interactive test session with the LangChain agent
     cmds:
-      - '{{.PYTHON}} tests/test_interactive.py'
+      - '{{.PYTHON}} tests/langchain/test_interactive.py'
       
   curl:
     desc: Test the LangChain agent using curl
     cmds:
-      - ./tests/curl_example.sh {{.CLI_ARGS}}
+      - ./tests/langchain/curl_example.sh {{.CLI_ARGS}}
     summary: |
       Test the LangChain agent using curl.
       
