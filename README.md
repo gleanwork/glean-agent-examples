@@ -1,6 +1,6 @@
-# Glean-LangChain Interoperability
+# Glean Agent Examples
 
-A proof of concept demonstrating bidirectional integration between Glean and LangChain.
+A collection of examples demonstrating how to integrate Glean with external Agent frameworks.
 
 ## Overview
 
@@ -66,7 +66,7 @@ This project demonstrates two key integration patterns:
 
    Note: The Glean API URL must follow the format `https://your-instance.glean.com/api/v1` with `/api/v1` at the end.
 
-## Usage
+## Running Examples
 
 ### Available Examples
 
@@ -142,7 +142,6 @@ Or simply use the default example:
 
 ```bash
 task example:start
-# Defaults to langchain/agent
 ```
 
 ## Components
