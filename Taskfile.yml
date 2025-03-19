@@ -3,6 +3,15 @@ version: '3'
 vars:
   PYTHON: .venv/bin/python
   EXAMPLE: '{{.EXAMPLE | default "langchain"}}'
+  PARSE_EXAMPLE: |
+    function parse_example() {
+      IFS='/' read -r example_dir example_file <<< "$1"
+      if [ -z "$example_file" ]; then
+        example_file="agent"
+      fi
+      echo "$example_dir" "$example_file"
+    }
+    read example_dir example_file < <(parse_example "{{.EXAMPLE}}")
 
 tasks:
   start:
@@ -29,10 +38,7 @@ tasks:
     silent: true
     cmds:
       - |
-        IFS='/' read -r example_dir example_file <<< "{{.EXAMPLE}}"
-        if [ -z "$example_file" ]; then
-          example_file="agent"
-        fi
+        {{.PARSE_EXAMPLE}}
         {{.PYTHON}} src/glean_agent_examples/examples/$example_dir/$example_file.py
     summary: |
       Start the agent server for the specified example.
@@ -101,10 +107,7 @@ tasks:
     silent: true
     cmds:
       - |
-        IFS='/' read -r example_dir example_file <<< "{{.EXAMPLE}}"
-        if [ -z "$example_file" ]; then
-          example_file="agent"
-        fi
+        {{.PARSE_EXAMPLE}}
         {{.PYTHON}} tests/examples/$example_dir/test_$example_file.py {{.CLI_ARGS}}
     summary: |
       Test the agent with a query.
@@ -123,10 +126,7 @@ tasks:
     silent: true
     cmds:
       - |
-        IFS='/' read -r example_dir example_file <<< "{{.EXAMPLE}}"
-        if [ -z "$example_file" ]; then
-          example_file="agent"
-        fi
+        {{.PARSE_EXAMPLE}}
         {{.PYTHON}} tests/examples/$example_dir/test_interactive_$example_file.py
     summary: |
       Start an interactive test session with the agent.
@@ -145,10 +145,7 @@ tasks:
     silent: true
     cmds:
       - |
-        IFS='/' read -r example_dir example_file <<< "{{.EXAMPLE}}"
-        if [ -z "$example_file" ]; then
-          example_file="agent"
-        fi
+        {{.PARSE_EXAMPLE}}
         ./tests/examples/$example_dir/curl_${example_file}.sh {{.CLI_ARGS}}
     summary: |
       Test the agent using curl.
