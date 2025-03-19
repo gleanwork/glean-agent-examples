@@ -55,7 +55,7 @@ tasks:
   install:
     desc: Install dependencies
     cmds:
-      - uv pip install -e .
+      - uv pip install
       
   ngrok:
     desc: Start ngrok tunnel to expose the LangChain agent server

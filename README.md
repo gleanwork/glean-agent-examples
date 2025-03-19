@@ -24,22 +24,40 @@ This project demonstrates two key integration patterns:
 2. Install uv if you haven't already:
 
    ```bash
+   # macOS with Homebrew
+   brew install uv
+   
+   # Linux/macOS with curl
    curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # Windows with pip
+   pip install uv
    ```
 
-3. Create a virtual environment and install dependencies:
+3. Install Go-Task if you haven't already:
 
    ```bash
-   uv venv .venv
-   source .venv/bin/activate  # On macOS/Linux
-   # or
-   .venv\Scripts\activate     # On Windows
+   # macOS with Homebrew
+   brew install go-task/tap/go-task
+   
+   # Linux/macOS with curl
+   sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
+   
+   # Windows with Scoop
+   scoop install task
+   ```
+
+4. Install dependencies:
+
+   ```bash
    task install
    ```
 
-4. Configure your environment variables in `.env`:
+   This will run `uv pip install -e .`, which automatically creates a virtual environment and installs the project in development mode.
 
-   ```
+5. Configure your environment variables in `.env`:
+
+   ```bash
    OPENAI_API_KEY=your_openai_api_key
    # Important: Glean API URL must include /api/v1 at the end
    GLEAN_API_URL=https://your-instance.glean.com/api/v1
@@ -50,12 +68,29 @@ This project demonstrates two key integration patterns:
 
 ## Usage
 
-### Running the LangChain Agent Server
+### Available Examples
 
-Start the LangChain agent server:
+To see all available examples and how to use them:
 
 ```bash
-task start
+task list:examples
+```
+
+This will show you all available example directories and files, along with usage instructions.
+
+### Running an Example
+
+Start an example server:
+
+```bash
+task example:serve EXAMPLE=langchain/glean_search_retriever
+```
+
+Or use the shorthand format if you want to use the default example:
+
+```bash
+task example:serve
+# Defaults to langchain/agent
 ```
 
 ### Exposing the Server with ngrok
@@ -68,36 +103,26 @@ task ngrok
 
 Take note of the ngrok URL (e.g., `https://abc123.ngrok.io`).
 
-### Testing the Agent
+### Running Queries Against the Example
 
-There are several ways to test the agent:
+There are several ways to interact with your running example:
 
-#### Single Query Test
+#### Run a Query
 
-Run a single test query:
-
-```bash
-task test -- "What information can you find about AI in Glean?"
-```
-
-This will first test your Glean API connection directly before testing the agent.
-
-#### Interactive Test Session
-
-Start an interactive test session:
+Run a query against your example:
 
 ```bash
-task interactive
+task example:run EXAMPLE=langchain/glean_search_retriever -- "What information can you find about AI in Glean?"
 ```
 
-This opens a command-line interface where you can have a conversation with the agent.
+This will first test your Glean API connection directly before running the query.
 
 #### Using curl
 
-Test the agent using curl:
+Test the example using curl:
 
 ```bash
-task curl -- "What information can you find about AI in Glean?"
+task example:curl EXAMPLE=langchain/glean_search_retriever -- "What information can you find about AI in Glean?"
 ```
 
 ### Configuring Glean Actions
@@ -107,10 +132,17 @@ task curl -- "What information can you find about AI in Glean?"
 
 ### Running Both Services
 
-To start both the server and ngrok in separate terminals:
+To start both the example server and ngrok in separate terminals:
 
 ```bash
-task dev
+task example:start EXAMPLE=langchain/glean_chat_model
+```
+
+Or simply use the default example:
+
+```bash
+task example:start
+# Defaults to langchain/agent
 ```
 
 ## Components
