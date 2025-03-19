@@ -49,8 +49,8 @@ def test_agent(query):
         print(f"\n❌ Unexpected Error: {str(e)}")
         return None
 
-def test_glean_directly():
-    """Test the Glean API directly using the Glean client."""
+def test_glean_chat_directly():
+    """Test the Glean Chat API directly."""
     load_dotenv()
     
     subdomain = os.getenv("GLEAN_SUBDOMAIN")
@@ -65,7 +65,7 @@ def test_glean_directly():
         print("\n=== Ensuring direct Glean API connection ===")
         print(f"Glean Subdomain: {subdomain}")
         print(f"Acting as: {act_as}")
-        
+
         auth = GleanAuth(
             api_token=api_key,
             subdomain=subdomain,
@@ -74,38 +74,58 @@ def test_glean_directly():
         client = GleanSession(auth=auth)
         
         payload = {
-            "query": "test",
-            "pageSize": 1
+            "messages": [
+                {
+                    "author": "USER",
+                    "messageType": "CONTENT",
+                    "agentConfig": {
+                        "agent": "DEFAULT",
+                        "mode": "DEFAULT"
+                    },
+                    "fragments": [
+                        {
+                            "text": "Hello, can you tell me about the company holidays?"
+                        }
+                    ]
+                }
+            ]
         }
         
-        print("Making search request...")
-        results = client.post("search", json=payload)
+        print("Making chat request...")
+        response = client.post("chat", json=payload)
         
-        if "results" in results:
-            result_count = len(results.get("results", []))
-            print(f"✅ Glean client connection successful! Got {result_count} results.")
-            return True
+        if "messages" in response and len(response.get("messages", [])) > 0:
+            last_message = response["messages"][-1]
+            if "fragments" in last_message and len(last_message["fragments"]) > 0:
+                print("\n✅ Glean Chat API connection successful!")
+                print("\nResponse preview:")
+                print(last_message["fragments"][0]["text"][:200] + "...")
+                return True
+            else:
+                print("\n⚠️ Glean Chat API connected but no message fragments were returned.")
+                print(f"Response: {json.dumps(response, indent=2)}")
+                return False
         else:
-            print("⚠️ Glean client connected but no results were returned.")
-            print(f"Response: {json.dumps(results, indent=2)}")
-            return True  # Still consider this a success since we connected
+            print("\n⚠️ Glean Chat API connected but no messages were returned.")
+            print(f"Response: {json.dumps(response, indent=2)}")
+            return False
         
     except Exception as e:
-        print(f"\n❌ Error connecting to Glean API: {str(e)}")
+        print(f"\n❌ Error connecting to Glean Chat API: {str(e)}")
         return False
 
 if __name__ == "__main__":
-    # First test Glean API directly
-    glean_ok = test_glean_directly()
+    # First test Glean Chat API directly
+    glean_ok = test_glean_chat_directly()
     
     if not glean_ok:
-        print("\n⚠️ Warning: Glean API test failed. The agent may not work correctly.")
+        print("\n⚠️ Warning: Glean Chat API test failed. The agent may not work correctly.")
         proceed = input("Do you want to proceed with testing the agent anyway? (y/n): ")
         if proceed.lower() != 'y':
             sys.exit(1)
     
     # Get query from command line argument or use a default
-    query = sys.argv[1] if len(sys.argv) > 1 else "What information can you find about machine learning in Glean?"
+    query = sys.argv[1] if len(sys.argv) > 1 else "What are the company holidays this year?"
     
     # Test the agent
-    test_agent(query) 
+    test_agent(query)
