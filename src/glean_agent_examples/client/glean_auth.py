@@ -1,7 +1,3 @@
-"""
-Authentication settings for Glean API.
-"""
-
 from typing import Dict, Optional
 
 

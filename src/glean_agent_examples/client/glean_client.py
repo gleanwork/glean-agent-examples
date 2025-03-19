@@ -1,9 +1,3 @@
-"""
-Client for interacting with Glean's REST API.
-
-This module provides a simple interface for making authenticated requests to Glean's API endpoints.
-"""
-
 from typing import Dict, Any, Optional, Literal
 from json import JSONDecodeError
 import requests
@@ -15,10 +9,9 @@ DEFAULT_TIMEOUT = 60
 
 class GleanSession:
     """
-    A session for making authenticated requests to Glean's API endpoints.
+    Client for interacting with Glean's REST API.
 
-    This class provides a session for making authenticated requests to Glean's API endpoints.
-    It handles the authentication and session management.
+    This class provides a simple interface for making authenticated requests to Glean's API endpoints.
 
     Args:
         subdomain: Subdomain for Glean API

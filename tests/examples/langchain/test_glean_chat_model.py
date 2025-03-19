@@ -5,13 +5,12 @@ import sys
 import os
 from dotenv import load_dotenv
 
-# Import the Glean client for direct testing
-from glean_langchain_interop.client import GleanAuth, GleanSession
+from glean_agent_examples.client import GleanAuth, GleanSession
 
 def test_agent(query):
     """Test the LangChain agent with a query."""
     url = "http://localhost:8000/runs"
-    
+
     payload = {
         "input": query,
         "conversation_id": "test-conversation"
@@ -50,24 +49,23 @@ def test_agent(query):
         print(f"\n❌ Unexpected Error: {str(e)}")
         return None
 
-def test_glean_directly():
-    """Test the Glean API directly using the Glean client."""
+def test_glean_chat_directly():
+    """Test the Glean Chat API directly."""
     load_dotenv()
     
     subdomain = os.getenv("GLEAN_SUBDOMAIN")
-    api_key = os.getenv("GLEAN_API_KEY")
-    act_as = os.getenv("GLEAN_ACT_AS", "steve.calvert@glean.com")
+    api_key = os.getenv("GLEAN_API_TOKEN")
+    act_as = os.getenv("GLEAN_ACT_AS")
     
     if not subdomain or not api_key:
         print("\n❌ Error: Missing Glean API credentials in .env file.")
         return False
     
     try:
-        print("\n=== Testing Glean Client Directly ===")
+        print("\n=== Ensuring direct Glean API connection ===")
         print(f"Glean Subdomain: {subdomain}")
         print(f"Acting as: {act_as}")
-        
-        # Initialize the Glean client with the subdomain directly
+
         auth = GleanAuth(
             api_token=api_key,
             subdomain=subdomain,
@@ -75,41 +73,59 @@ def test_glean_directly():
         )
         client = GleanSession(auth=auth)
         
-        # Make a simple search request
         payload = {
-            "query": "test",
-            "pageSize": 1
+            "messages": [
+                {
+                    "author": "USER",
+                    "messageType": "CONTENT",
+                    "agentConfig": {
+                        "agent": "DEFAULT",
+                        "mode": "DEFAULT"
+                    },
+                    "fragments": [
+                        {
+                            "text": "Hello, can you tell me about the company holidays?"
+                        }
+                    ]
+                }
+            ]
         }
         
-        print("Making search request...")
-        results = client.post("search", json=payload)
+        print("Making chat request...")
+        response = client.post("chat", json=payload)
         
-        # Check if we got results
-        if "results" in results:
-            result_count = len(results.get("results", []))
-            print(f"✅ Glean client connection successful! Got {result_count} results.")
-            return True
+        if "messages" in response and len(response.get("messages", [])) > 0:
+            last_message = response["messages"][-1]
+            if "fragments" in last_message and len(last_message["fragments"]) > 0:
+                print("\n✅ Glean Chat API connection successful!")
+                print("\nResponse preview:")
+                print(last_message["fragments"][0]["text"][:200] + "...")
+                return True
+            else:
+                print("\n⚠️ Glean Chat API connected but no message fragments were returned.")
+                print(f"Response: {json.dumps(response, indent=2)}")
+                return False
         else:
-            print("⚠️ Glean client connected but no results were returned.")
-            print(f"Response: {json.dumps(results, indent=2)}")
-            return True  # Still consider this a success since we connected
+            print("\n⚠️ Glean Chat API connected but no messages were returned.")
+            print(f"Response: {json.dumps(response, indent=2)}")
+            return False
         
     except Exception as e:
-        print(f"\n❌ Error connecting to Glean API: {str(e)}")
+        print(f"\n❌ Error connecting to Glean Chat API: {str(e)}")
         return False
 
 if __name__ == "__main__":
-    # First test Glean API directly
-    glean_ok = test_glean_directly()
+    # First test Glean Chat API directly
+    glean_ok = test_glean_chat_directly()
     
     if not glean_ok:
-        print("\n⚠️ Warning: Glean API test failed. The agent may not work correctly.")
+        print("\n⚠️ Warning: Glean Chat API test failed. The agent may not work correctly.")
         proceed = input("Do you want to proceed with testing the agent anyway? (y/n): ")
         if proceed.lower() != 'y':
             sys.exit(1)
     
     # Get query from command line argument or use a default
-    query = sys.argv[1] if len(sys.argv) > 1 else "What information can you find about machine learning in Glean?"
+    query = sys.argv[1] if len(sys.argv) > 1 else "What are the company holidays this year?"
     
     # Test the agent
-    test_agent(query) 
+    test_agent(query)

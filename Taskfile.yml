@@ -2,12 +2,55 @@ version: '3'
 
 vars:
   PYTHON: .venv/bin/python
+  EXAMPLE: '{{.EXAMPLE | default "langchain"}}'
+  PARSE_EXAMPLE: |
+    function parse_example() {
+      IFS='/' read -r example_dir example_file <<< "$1"
+      if [ -z "$example_file" ]; then
+        example_file="agent"
+      fi
+      echo "$example_dir" "$example_file"
+    }
+    read example_dir example_file < <(parse_example "{{.EXAMPLE}}")
 
 tasks:
-  start:
-    desc: Start the LangChain agent server
+  example:start:
+    desc: Start both the example server and ngrok in separate terminals
+    silent: true
     cmds:
-      - '{{.PYTHON}} src/glean_langchain_interop/agent.py'
+      - task: example:serve
+        silent: true
+      - task: ngrok
+        silent: true
+    summary: |
+      Start both the example server and ngrok in separate terminals.
+      
+      Usage:
+        task example:start EXAMPLE=<directory>[/<file>]
+      
+      Example:
+        task example:start EXAMPLE=langchain/agent
+        task example:start EXAMPLE=langgraph/custom_agent
+        task example:start  # defaults to langchain/agent
+  
+  example:serve:
+    desc: Start the example server
+    silent: true
+    cmds:
+      - |
+        {{.PARSE_EXAMPLE}}
+        {{.PYTHON}} src/glean_agent_examples/examples/$example_dir/$example_file.py
+    summary: |
+      Start the server for the specified example.
+      
+      Usage:
+        task example:serve EXAMPLE=<directory>[/<file>]
+      
+      Example:
+        task example:serve EXAMPLE=langchain/agent
+        task example:serve EXAMPLE=langgraph/custom_agent
+        task example:serve EXAMPLE=langchain  # defaults to agent.py
+        task example:serve  # defaults to langchain/agent
     
   install:
     desc: Install dependencies
@@ -17,43 +60,82 @@ tasks:
   ngrok:
     desc: Start ngrok tunnel to expose the LangChain agent server
     cmds:
-      - ngrok http 8000
-      
-  dev:
-    desc: Start both the server and ngrok in separate terminals
+      - ngrok http 8000    
+  
+  list:examples:
+    desc: List all available examples and how to use them
+    silent: true
     cmds:
-      - task: start
-        silent: true
-      - task: ngrok
-        silent: true
+      - |
+        # Define colors
+        GREEN="\033[0;32m"
+        YELLOW="\033[0;33m"
+        CYAN="\033[0;36m"
+        BOLD="\033[1m"
+        RESET="\033[0m"
         
-  test:
-    desc: Test the LangChain agent with a query
-    cmds:
-      - '{{.PYTHON}} tests/test_agent.py {{.CLI_ARGS}}'
+        echo -e "${BOLD}Available Examples:${RESET}"
+        echo ""
+        for dir in src/glean_agent_examples/examples/*/; do
+          example=$(basename "$dir")
+          echo -e "${CYAN}$example:${RESET}"
+          find "$dir" -type f -not -name "__init__.py" -not -path "*/\.*" | sort | while read file; do
+            filename=$(basename "$file" .py)
+            echo -e "  ${YELLOW}- $filename${RESET}"
+          done
+          echo ""
+        done
+        echo -e "${BOLD}How to use examples:${RESET}"
+        echo -e "${BOLD}-------------------${RESET}"
+        echo -e "To run an example, use the format: ${CYAN}<directory>${RESET}/${YELLOW}<file>${RESET} (without extension)"
+        echo ""
+        echo -e "${BOLD}Examples:${RESET}"
+        echo -e "  task example:serve EXAMPLE=${CYAN}langchain${RESET}/${YELLOW}agent${RESET}"
+        echo -e "  task example:run EXAMPLE=${CYAN}langchain${RESET}/${YELLOW}agent${RESET} -- \"what are the company holidays\""
+        echo ""
     summary: |
-      Test the LangChain agent with a query.
+      List all available examples and how to use them.
       
       Usage:
-        task test -- "Your query here"
+        task list:examples
       
-      Example:
-        task test -- "What information can you find about AI in Glean?"
+      This will show all available examples and instructions on how to use them
+      with the EXAMPLE parameter in other tasks.
         
-  interactive:
-    desc: Start an interactive test session with the LangChain agent
+  example:run:
+    desc: Run the example with a query
+    silent: true
     cmds:
-      - '{{.PYTHON}} tests/test_interactive.py'
-      
-  curl:
-    desc: Test the LangChain agent using curl
-    cmds:
-      - ./tests/curl_example.sh {{.CLI_ARGS}}
+      - |
+        {{.PARSE_EXAMPLE}}
+        {{.PYTHON}} tests/examples/$example_dir/test_$example_file.py {{.CLI_ARGS}}
     summary: |
-      Test the LangChain agent using curl.
+      Run the example with a query.
       
       Usage:
-        task curl -- "Your query here"
+        task example:run EXAMPLE=<directory>[/<file>] -- "Your query here"
       
       Example:
-        task curl -- "What information can you find about AI in Glean?"
+        task example:run EXAMPLE=langchain/agent -- "What information can you find about AI in Glean?"
+        task example:run EXAMPLE=langgraph/custom_agent -- "what are the company holidays"
+        task example:run EXAMPLE=langchain -- "What information can you find about AI in Glean?"  # defaults to agent
+        task example:run -- "What information can you find about AI in Glean?"  # defaults to langchain/agent
+      
+  example:curl:
+    desc: Run the example using curl
+    silent: true
+    cmds:
+      - |
+        {{.PARSE_EXAMPLE}}
+        ./tests/examples/$example_dir/curl_${example_file}.sh {{.CLI_ARGS}}
+    summary: |
+      Run the example using curl.
+      
+      Usage:
+        task example:curl EXAMPLE=<directory>[/<file>] -- "Your query here"
+      
+      Example:
+        task example:curl EXAMPLE=langchain/agent -- "What information can you find about AI in Glean?"
+        task example:curl EXAMPLE=langgraph/custom_agent -- "what are the company holidays"
+        task example:curl EXAMPLE=langchain -- "What information can you find about AI in Glean?"  # defaults to agent
+        task example:curl -- "What information can you find about AI in Glean?"  # defaults to langchain/agent
