@@ -7,11 +7,12 @@ readme = "README.md"
 dependencies = [
     "langchain",
     "langchain_openai",
+    "langgraph",
     "fastapi",
-    "uvicorn",
     "pydantic",
-    "requests",
     "python-dotenv",
+    "requests",
+    "uvicorn",
 ]
 
 [build-system]

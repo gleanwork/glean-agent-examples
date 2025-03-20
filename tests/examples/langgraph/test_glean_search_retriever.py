@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from glean_agent_examples.client import GleanAuth, GleanSession
 
 def test_agent(query):
-    """Test the LangChain agent with a query."""
+    """Test the LangGraph agent with a query."""
     url = "http://localhost:8000/runs"
 
     payload = {
@@ -34,7 +34,7 @@ def test_agent(query):
         return result
     except requests.exceptions.ConnectionError:
         print("\n❌ Error: Could not connect to the server.")
-        print("   Make sure the server is running with 'task start'.")
+        print("   Make sure the server is running with 'task example:serve EXAMPLE=langgraph/glean_search_retriever'.")
         return None
     except requests.exceptions.HTTPError as e:
         print(f"\n❌ HTTP Error: {e}")
@@ -104,7 +104,7 @@ if __name__ == "__main__":
             sys.exit(1)
     
     # Get query from command line argument or use a default
-    query = sys.argv[1] if len(sys.argv) > 1 else "What information can you find about machine learning in Glean?"
+    query = sys.argv[1] if len(sys.argv) > 1 else "What are the company holidays this year?"
     
     # Test the agent
-    test_agent(query) 
+    test_agent(query)
