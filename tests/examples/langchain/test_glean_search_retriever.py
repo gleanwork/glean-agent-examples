@@ -95,7 +95,6 @@ def test_glean_directly():
         return False
 
 if __name__ == "__main__":
-    # First test Glean API directly
     glean_ok = test_glean_directly()
     
     if not glean_ok:

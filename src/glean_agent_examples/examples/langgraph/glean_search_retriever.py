@@ -22,9 +22,6 @@ class AgentState(TypedDict):
 def glean_search(query: str) -> str:
     """Search for information in Glean."""
     try:
-        if not isinstance(query, str):
-            return f"Error: Expected string query but got {type(query)}"
-            
         docs = glean_retriever.invoke(query)
         
         if not docs:

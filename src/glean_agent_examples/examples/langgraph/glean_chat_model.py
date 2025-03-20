@@ -24,9 +24,6 @@ class AgentState(TypedDict):
 def ask_glean_chat(query: str) -> str:
     """Ask a question to Glean's chat model."""
     try:
-        if not isinstance(query, str):
-            return f"Error: Expected string query but got {type(query)}"
-            
         response = glean_chat.invoke([HumanMessage(content=query)])
         return response.content
     except Exception as e:
