@@ -81,7 +81,7 @@ tasks:
           echo -e "${CYAN}$example:${RESET}"
           find "$dir" -type f -not -name "__init__.py" -not -path "*/\.*" | sort | while read file; do
             filename=$(basename "$file" .py)
-            echo -e "  ${YELLOW}- $filename${RESET}"
+            echo -e "  ${YELLOW}- $example/$filename${RESET}"
           done
           echo ""
         done
