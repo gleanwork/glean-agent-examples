@@ -7,7 +7,7 @@ from .glean_auth import GleanAuth
 DEFAULT_TIMEOUT = 60
 
 
-class GleanSession:
+class GleanClient:
     """
     Client for interacting with Glean's REST API.
 

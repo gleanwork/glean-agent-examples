@@ -4,17 +4,39 @@ A collection of examples demonstrating how to integrate Glean with external Agen
 
 ## Overview
 
-This project demonstrates two key integration patterns:
+This project demonstrates two key integration patterns using both LangChain and LangGraph frameworks:
 
-1. **LangChain → Glean**: Enabling LangChain agents to search and retrieve information from Glean's knowledge base.
-2. **Glean → LangChain**: Allowing Glean users to invoke specialized LangChain agents from within the Glean interface.
+1. **Glean Search Retriever**: Enabling agents to search and retrieve information from Glean's knowledge base.
+2. **Glean Chat Model**: Allowing agents to interact with Glean's chat capabilities for more conversational responses.
+
+## Architecture
+
+Each example follows a consistent architecture with two main components:
+
+### Server Components (`*_server.py`)
+
+These files contain the core agent logic and expose a FastAPI server with REST endpoints. They:
+
+- Define the agent's behavior and capabilities
+- Set up the necessary tools and models
+- Expose endpoints for interacting with the agent
+- Handle incoming requests and return responses
+
+### Runner Components (`*_runner.py`)
+
+These files provide a convenient way to test and interact with the server components. They:
+
+- Validate connectivity to required services (Glean, OpenAI, etc.)
+- Provide a command-line interface for sending queries to the agent
+- Handle error reporting and display results in a user-friendly format
+
+This separation makes it easy to both run the agent as a service and to test it directly from the command line.
 
 ## Prerequisites
 
 - Python 3.13+
 - [uv](https://github.com/astral-sh/uv) for Python package management
 - [Go-Task](https://taskfile.dev/) for running commands
-- [ngrok](https://ngrok.com/) for exposing your local server
 - Glean API credentials
 - OpenAI API key
 
@@ -59,12 +81,11 @@ This project demonstrates two key integration patterns:
 
    ```bash
    OPENAI_API_KEY=your_openai_api_key
-   # Important: Glean API URL must include /api/v1 at the end
-   GLEAN_API_URL=https://your-instance.glean.com/api/v1
-   GLEAN_API_KEY=your_glean_api_key
+   GLEAN_SUBDOMAIN=your-instance
+   GLEAN_API_TOKEN=your_glean_api_token
+   # Optional: Act as a specific user for testing
+   GLEAN_ACT_AS=user@example.com
    ```
-
-   Note: The Glean API URL must follow the format `https://your-instance.glean.com/api/v1` with `/api/v1` at the end.
 
 ## Running Examples
 
@@ -76,88 +97,91 @@ To see all available examples and how to use them:
 task list:examples
 ```
 
-This will show you all available example directories and files, along with usage instructions.
+This will show you all available examples, along with usage instructions. The examples are organized by framework (LangChain or LangGraph) and functionality (Search Retriever or Chat Model).
 
 ### Running an Example
 
-Start an example server:
+There are two components used to interact with the examples:
+
+#### 1. Start a Server
+
+Start an example server to expose an API endpoint:
 
 ```bash
-task example:serve EXAMPLE=langchain/glean_search_retriever
+task serve:example EXAMPLE=langchain/glean_chat_model
 ```
 
-Or use the shorthand format if you want to use the default example:
+This starts a FastAPI server on `localhost:8000` that you can interact with via HTTP requests.
+
+#### 2. Run a Query Directly
+
+Run a query against an example:
 
 ```bash
-task example:serve
-# Defaults to langchain/agent
+task run:example EXAMPLE=langgraph/glean_search_retriever -- "What information can you find about AI in Glean?"
 ```
 
-### Exposing the Server with ngrok
+This will:
 
-In a separate terminal, start ngrok to expose your local server:
+1. First validate connectivity to the Glean API
+2. Send your query to the server
+3. Display the response
 
-```bash
-task ngrok
-```
+### Example Workflow
 
-Take note of the ngrok URL (e.g., `https://abc123.ngrok.io`).
+A typical workflow might look like this:
 
-### Running Queries Against the Example
+1. **Explore available examples**:
 
-There are several ways to interact with your running example:
+   ```bash
+   task list:examples
+   ```
 
-#### Run a Query
+2. **Start the associated server**:
 
-Run a query against your example:
+   ```bash
+   task serve:example EXAMPLE=langchain/glean_chat_model
+   ```
 
-```bash
-task example:run EXAMPLE=langchain/glean_search_retriever -- "What information can you find about AI in Glean?"
-```
+3. **Run a test query**:
 
-This will first test your Glean API connection directly before running the query.
-
-#### Using curl
-
-Test the example using curl:
-
-```bash
-task example:curl EXAMPLE=langchain/glean_search_retriever -- "What information can you find about AI in Glean?"
-```
-
-### Configuring Glean Actions
-
-1. Update the `openapi.yaml` file with your ngrok URL
-2. In Glean, create a new Action using the OpenAPI specification from `openapi.yaml`
-
-### Running Both Services
-
-To start both the example server and ngrok in separate terminals:
-
-```bash
-task example:start EXAMPLE=langchain/glean_chat_model
-```
-
-Or simply use the default example:
-
-```bash
-task example:start
-```
+   ```bash
+   task run:example EXAMPLE=langchain/glean_chat_model -- "What are the company holidays?"
+   ```
 
 ## Components
 
-- **GleanRetriever**: A LangChain retriever that connects to Glean's search API
-- **LangChain Agent**: A FastAPI server implementing the LangChain Agent Protocol
-- **OpenAPI Specification**: Defines the API that Glean can call
+### Framework Implementations
+
+- **LangChain**: Uses the LangChain framework for building agents
+  - `glean_search_retriever_server.py`: Implements a search retriever using LangChain
+  - `glean_chat_model_server.py`: Implements a chat model using LangChain
+
+- **LangGraph**: Uses the LangGraph framework for building agents with state management
+  - `glean_search_retriever_server.py`: Implements a search retriever using LangGraph
+  - `glean_chat_model_server.py`: Implements a chat model using LangGraph
+
+### Core Components
+
+- **BaseExampleServer**: Base class that handles common server functionality
+- **BaseExampleRunner**: Base class that handles common runner functionality
+- **GleanClient**: Client for interacting with the Glean API
 
 ## Glean API Integration
 
-This project uses the [Glean Search API](https://developers.glean.com/client/operation/search/) to retrieve documents. The integration:
+This project integrates with two key Glean APIs:
 
-1. Sends search queries to Glean's `/search` endpoint
-2. Processes the results to extract content and metadata
-3. Converts Glean search results into LangChain Document objects
-4. Makes the documents available to LangChain agents
+1. **Glean Search API**: Used by the search retriever examples
+
+   - Sends search queries to Glean's search endpoint
+   - Processes the results to extract content and metadata
+   - Converts Glean search results into document objects for agent use
+
+2. **Glean Chat API**: Used by the chat model examples
+
+   - Sends chat queries to Glean's chat endpoint
+   - Leverages Glean's knowledge base for accurate responses
+   - Maintains conversation context for multi-turn interactions
 
 ## License
 
