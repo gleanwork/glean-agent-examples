@@ -2,7 +2,7 @@
 Base class for all Glean agent examples.
 """
 
-from enum import Enum, auto
+from enum import Enum
 
 class IconType(Enum):
     """
@@ -40,9 +40,9 @@ class BaseExample:
             title: The title text to print
             icon: An icon to display before the title. Can be a string or an IconType enum value.
         """
-        # Convert IconType to string if needed
+
         icon_str = icon.value if isinstance(icon, IconType) else icon
-        print(f"\n=== {icon_str} {title} ===\n")
+        print(f"\n{icon_str} {title}\n")
 
 
     def print_message(self, message: str, icon: str | IconType = "") -> None:
@@ -54,10 +54,11 @@ class BaseExample:
             icon: An icon to display before the message. Can be a string or an IconType enum value.
         """
         icon_str = icon.value if isinstance(icon, IconType) else icon
-        prefix = f"{icon_str} " if icon_str else ""
-
-        if prefix:
-            print(f"\n{prefix}{message}\n")
+        green_info = "\033[32mINFO\033[0m"
+        
+        if icon_str:
+            prefix = f"{icon_str} "
+            print(f"\n{green_info}:     {prefix}{message}\n")
         else:
-            print(message)
+            print(f"{green_info}:     {message}")
     

@@ -29,7 +29,8 @@ class GleanSearchRetrieverRunner(BaseExampleRunner):
             "pageSize": 1
         }
         
-        self.print_message("Making search request...")
+        self.print_title("Making search request", IconType.API)
+
         results = client.post("search", json=payload)
         
         if "results" in results:
@@ -47,7 +48,6 @@ if __name__ == "__main__":
     
     try:
         query = runner.read_query()
-        runner.print_message(f"Testing against the server at {runner.example.server_url}...")
         runner.run(query)
     except ValueError as e:
         runner.print_message(f"Error: {e}")

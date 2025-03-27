@@ -1,3 +1,4 @@
+import json
 import sys
 
 from glean_agent_examples.common import BaseExampleRunner, IconType
@@ -22,7 +23,6 @@ class GleanChatModelRunner(BaseExampleRunner):
         Returns:
             True if validation succeeds, False otherwise
         """
-        import json
         
         payload = {
             "messages": [
@@ -42,19 +42,20 @@ class GleanChatModelRunner(BaseExampleRunner):
             ]
         }
         
-        print("Making chat request...")
+        self.print_title("Making chat request", IconType.API)
+
         response = client.post("chat", json=payload)
         
         if "messages" in response and len(response.get("messages", [])) > 0:
             last_message = response["messages"][-1]
             if "fragments" in last_message and len(last_message["fragments"]) > 0:
-                self.print_message("Glean Chat API connection successful!", IconType.SUCCESS)
-                self.print_message("Response preview:")
-                self.print_message(last_message["fragments"][0]["text"][:200] + "...")
+                self.print_title("Glean Chat API connection successful!", IconType.SUCCESS)
+
                 return True
             else:
                 self.print_message("Glean Chat API connected but no message fragments were returned.", IconType.WARNING)
                 self.print_message(f"Response: {json.dumps(response, indent=2)}")
+                
                 return False
         else:
             self.print_message("Glean Chat API connected but no messages were returned.", IconType.WARNING)
@@ -67,7 +68,6 @@ if __name__ == "__main__":
     
     try:
         query = runner.read_query()
-        runner.print_message(f"\nTesting against the server at {runner.example.server_url}...")
         runner.run(query)
     except ValueError as e:
         runner.print_message(f"Error: {e}")
