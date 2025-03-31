@@ -23,7 +23,7 @@ class OpenAIGleanAgentExample(BaseExampleServer):
     def __init__(self):
         """Initialize the example."""
         super().__init__(
-            title="OpenAI Agent Protocol Server with Glean MCP",
+            title="OpenAI Agent SDK with Glean MCP",
             description="OpenAI agent that uses Glean's MCP server to access company knowledge"
         )
         
@@ -76,6 +76,7 @@ class OpenAIGleanAgentExample(BaseExampleServer):
                     )
         except Exception as e:
             print(f"Error executing agent: {str(e)}")
+            
             return AgentOutput(
                 output="I encountered an error while processing your request. Please try again or contact support if the issue persists."
             )

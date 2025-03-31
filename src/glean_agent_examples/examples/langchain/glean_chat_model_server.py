@@ -32,7 +32,7 @@ class LangchainGleanChatExample(BaseExampleServer):
     def __init__(self):
         """Initialize the example."""
         super().__init__(
-            title="Langchain Agent Protocol Server with Glean Chat",
+            title="Langchain Agent Server with Glean Chat",
             description="LangChain agent that uses Glean's chat model to answer questions"
         )
         

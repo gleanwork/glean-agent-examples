@@ -32,7 +32,7 @@ class LangchainGleanSearchExample(BaseExampleServer):
     def __init__(self):
         """Initialize the example."""
         super().__init__(
-            title="Langchain Agent Protocol Server with Glean Search",
+            title="Langchain Agent Server with Glean Search",
             description="LangChain agent that uses Glean Search to retrieve information"
         )
         
