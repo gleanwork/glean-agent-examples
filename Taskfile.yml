@@ -10,7 +10,12 @@ vars:
     }
     read example_dir example_file < <(parse_example "{{.EXAMPLE}}")
 
-tasks:  
+tasks: 
+  install:
+    desc: Install dependencies
+    cmds:
+      - uv sync
+ 
   serve:example:
     desc: Start the example server
     silent: true
@@ -48,11 +53,6 @@ tasks:
         task run:example EXAMPLE=langgraph/glean_search_retriever -- "what are the company holidays"
         task run:example EXAMPLE=langchain -- "What information can you find about AI in Glean?"  # defaults to agent
         task run:example -- "What information can you find about AI in Glean?"  # defaults to langchain/agent
-
-  install:
-    desc: Install dependencies
-    cmds:
-      - uv pip install
   
   list:examples:
     desc: List all available examples and how to use them

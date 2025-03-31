@@ -27,7 +27,6 @@ class OpenAIGleanAgentExample(BaseExampleServer):
             description="OpenAI agent that uses Glean's MCP server to access company knowledge"
         )
         
-        # Initialize agent in the background
         self.agent = None
         self.mcp_server = None
 
@@ -38,13 +37,13 @@ class OpenAIGleanAgentExample(BaseExampleServer):
         self.mcp_server = MCPServerStdio(
             params={
                 "command": "npx",
-                "args": ["-y", "github:gleanwork/mcp-server"],
+                "args": ["-y", "@gleanwork/mcp-server"],
                 "env": {
                     "GLEAN_SUBDOMAIN": os.getenv("GLEAN_SUBDOMAIN"),
                     "GLEAN_API_TOKEN": os.getenv("GLEAN_API_TOKEN")
                 }
             },
-            cache_tools_list=True  # Cache the tools list to avoid repeated fetching
+            cache_tools_list=True
         )
         
         self.agent = Agent(

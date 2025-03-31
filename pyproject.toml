@@ -14,6 +14,8 @@ dependencies = [
     "requests",
     "uvicorn",
     "openai-agents",
+    "langchain-glean>=0.1.0",
+    "rich",
 ]
 
 [build-system]

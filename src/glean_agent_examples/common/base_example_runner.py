@@ -7,6 +7,8 @@ import json
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
+from rich.console import Console
+from rich.markdown import Markdown
 
 from .base_example import BaseExample
 from .base_example_server import BaseExampleServer, IconType
@@ -75,7 +77,6 @@ class BaseExampleRunner(BaseExample, ABC):
 
         load_dotenv()
         
-        # Check env vars (common to all)
         subdomain = os.getenv("GLEAN_SUBDOMAIN")
         api_key = os.getenv("GLEAN_API_TOKEN")
         act_as = os.getenv("GLEAN_ACT_AS")
@@ -148,7 +149,8 @@ class BaseExampleRunner(BaseExample, ABC):
             
             result = response.json()
             self.print_title("Agent Response", IconType.AGENT)
-            print(result["output"])
+            console = Console()
+            console.print(Markdown(result["output"]))
             return result
         except requests.exceptions.ConnectionError:
             self.print_message("Error: Could not connect to the server.", IconType.ERROR)
