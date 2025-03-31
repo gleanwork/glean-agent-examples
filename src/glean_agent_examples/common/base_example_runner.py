@@ -1,12 +1,16 @@
 import sys
 import asyncio
 import os
+import requests
+import json
+
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 
 from .base_example import BaseExample
 from .base_example_server import BaseExampleServer, IconType
+from .glean_client import GleanClient, GleanAuth
 
 
 class BaseExampleRunner(BaseExample, ABC):
@@ -47,7 +51,6 @@ class BaseExampleRunner(BaseExample, ABC):
                 print("Please set these variables in your .env file or environment.")
                 sys.exit(1)
         
-        # First validate connectivity
         if validate_connectivity:
             connectivity_ok = self.validate_connectivity()
             if not connectivity_ok:
@@ -55,8 +58,7 @@ class BaseExampleRunner(BaseExample, ABC):
                 proceed = input("Do you want to proceed with testing the agent anyway? (y/n): ")
                 if proceed.lower() != 'y':
                     sys.exit(1)
-        
-        # Run test suite with the provided query
+
         self.run_test_suite(query)
     
     def validate_connectivity(self) -> bool:
@@ -70,7 +72,6 @@ class BaseExampleRunner(BaseExample, ABC):
         Returns:
             True if all connectivity checks pass, False otherwise
         """
-        from glean_agent_examples.common import GleanClient, GleanAuth
 
         load_dotenv()
         
@@ -86,7 +87,7 @@ class BaseExampleRunner(BaseExample, ABC):
         try:
             self.print_title("Ensuring direct Glean API connection", IconType.API)
             self.print_message(f"Glean Subdomain: {subdomain}")
-            self.print_message(f"Acting as: {act_as}")
+            self.print_message(f"Acting as: {act_as or 'Not required'}")
             
             auth = GleanAuth(
                 api_token=api_key,
@@ -126,10 +127,7 @@ class BaseExampleRunner(BaseExample, ABC):
         Returns:
             The agent's response, or None if an error occurred
         """
-        import requests
-        import json
         
-        # Use provided server_url or get it from the example
         server_url = server_url or self.example.server_url
         url = f"{server_url}/runs"
 
@@ -141,7 +139,6 @@ class BaseExampleRunner(BaseExample, ABC):
             "Content-Type": "application/json"
         }
         
-        self.print_title("Sending Request", IconType.GLEAN)
         self.print_message(f"Query: {query}")
         self.print_message(f"Server URL: {url}")
         
@@ -151,7 +148,7 @@ class BaseExampleRunner(BaseExample, ABC):
             
             result = response.json()
             self.print_title("Agent Response", IconType.AGENT)
-            self.print_message(result["output"])
+            print(result["output"])
             return result
         except requests.exceptions.ConnectionError:
             self.print_message("Error: Could not connect to the server.", IconType.ERROR)
@@ -225,7 +222,7 @@ class BaseExampleRunner(BaseExample, ABC):
         if len(sys.argv) <= 1:
             raise ValueError("No query provided. Please provide a query as a command line argument.")
         return sys.argv[1]
-    
+
     def run_test_suite(self, query: str) -> Optional[Dict[str, Any]]:
         """
         Run a test suite against a running server.
@@ -236,15 +233,14 @@ class BaseExampleRunner(BaseExample, ABC):
         Returns:
             The test result, or None if the test failed
         """
-        self.print_title("Connecting with Agent", IconType.AGENT)
-        self.print_message(f"Testing against server at {self.example.server_url}")
-        
+        self.print_title("Sending Request to Agent", IconType.AGENT)
+
         result = self.test_agent(query, self.example.server_url)
-        
+
         if result:
             self.print_message("Test suite completed successfully!", IconType.SUCCESS)
             return result
-        else:
-            self.print_message("Test suite failed.", IconType.ERROR)
-            return None
-    
+        
+
+        self.print_message("Test suite failed.", IconType.ERROR)
+        return None

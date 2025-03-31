@@ -54,7 +54,6 @@ class GleanAuth:
         if version:
             base_url += "/" + version
 
-        print(f"Constructed Glean API base URL: {base_url}")
         return base_url
 
     def get_headers(self) -> Dict[str, str]:

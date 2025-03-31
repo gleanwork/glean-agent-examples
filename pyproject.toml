@@ -13,6 +13,7 @@ dependencies = [
     "python-dotenv",
     "requests",
     "uvicorn",
+    "openai-agents",
 ]
 
 [build-system]
