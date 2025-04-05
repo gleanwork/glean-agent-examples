@@ -1,5 +1,8 @@
-"""Glean-Langchain integration package."""
+"""
+Langchain Agent examples using Glean.
+"""
 
-__version__ = "0.1.0"
+from .chat_model_agent import LangchainChatAgent
+from .search_retriever_agent import LangchainSearchAgent
 
-__all__ = [] 
+__all__ = ["LangchainChatAgent", "LangchainSearchAgent"] 

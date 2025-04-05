@@ -3,9 +3,12 @@ from typing import Dict, Any, Type
 from pydantic import BaseModel, Field
 from agents import Agent, Runner, trace
 from agents.mcp import MCPServerStdio
+from rich.console import Console
+from rich.padding import Padding
 
-from glean_agent_examples.common import BaseExampleServer
+from glean_agent_examples.common import BaseExampleAgent
 
+console = Console()
 
 class AgentInput(BaseModel):
     input: str = Field(description="The question to ask the agent")
@@ -15,13 +18,10 @@ class AgentOutput(BaseModel):
     output: str = Field(description="The agent's response")
 
 
-class OpenAIGleanAgentExample(BaseExampleServer):
-    """
-    OpenAI Agent example using Glean MCP Server.
-    """
+class OpenAIAgent(BaseExampleAgent):
+    """OpenAI Agent example using Glean MCP Server."""
 
     def __init__(self):
-        """Initialize the example."""
         super().__init__(
             title="OpenAI Agent SDK with Glean MCP",
             description="OpenAI agent that uses Glean's MCP server to access company knowledge"
@@ -29,7 +29,6 @@ class OpenAIGleanAgentExample(BaseExampleServer):
         
         self.agent = None
         self.mcp_server = None
-
         self._setup_agent()
     
     def _setup_agent(self):
@@ -55,60 +54,32 @@ class OpenAIGleanAgentExample(BaseExampleServer):
         )
     
     async def run_agent(self, agent_input: AgentInput) -> Dict[str, Any]:
-        """
-        Run the agent with the given input.
-        
-        Args:
-            agent_input: The input to the agent
-            
-        Returns:
-            The agent's response
-        """
+        """Run the agent with the given input."""
         try:
+            console.print(Padding("[bold blue]→[/bold blue] Starting OpenAI agent...", (1, 0, 0, 2)))
             async with self.mcp_server as _:
+                console.print(Padding("[bold blue]→[/bold blue] Connected to MCP server", (0, 0, 0, 2)))
                 with trace(workflow_name="Glean OpenAI Agent Example"):
+                    console.print(Padding("[bold blue]→[/bold blue] Running agent workflow...", (0, 0, 0, 2)))
                     result = await Runner.run(
                         starting_agent=self.agent,
                         input=agent_input.input
                     )
-                    return AgentOutput(
-                        output=result.final_output
-                    )
+                    console.print(Padding("[bold green]✓[/bold green] Workflow completed", (0, 0, 0, 2)))
+                    return {"output": result.final_output}
         except Exception as e:
-            print(f"Error executing agent: {str(e)}")
-            
-            return AgentOutput(
-                output="I encountered an error while processing your request. Please try again or contact support if the issue persists."
-            )
+            error_msg = f"[bold red]✗[/bold red] Error: {str(e)}"
+            console.print(Padding(error_msg, (0, 0, 0, 2)))
+            return {"output": "I encountered an error while processing your request. Please try again or contact support if the issue persists."}
     
     def get_input_model(self) -> Type[BaseModel]:
-        """
-        Get the Pydantic model for the agent input.
-        
-        Returns:
-            The Pydantic model class for the agent input
-        """
+        """Get the Pydantic model for the agent input."""
         return AgentInput
     
-    def get_response_model(self) -> Type[BaseModel]:
-        """
-        Get the Pydantic model for the agent response.
-        
-        Returns:
-            The Pydantic model class for the agent response
-        """
-        return AgentOutput
+    def get_response_model(self) -> Type[Dict[str, Any]]:
+        """Get the type for the agent response."""
+        return Dict[str, Any]
     
     def get_required_env_vars(self) -> list[str]:
-        """
-        Get a list of required environment variables.
-        
-        Returns:
-            A list of required environment variable names
-        """
-        return ["GLEAN_SUBDOMAIN", "GLEAN_API_TOKEN", "OPENAI_API_KEY"]
-
-
-if __name__ == "__main__":
-    example = OpenAIGleanAgentExample()
-    example.start_app() 
+        """Get a list of required environment variables."""
+        return ["GLEAN_SUBDOMAIN", "GLEAN_API_TOKEN", "OPENAI_API_KEY"] 

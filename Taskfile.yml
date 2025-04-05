@@ -2,13 +2,6 @@ version: '3'
 
 vars:
   PYTHON: .venv/bin/python
-  EXAMPLE: '{{.EXAMPLE | default "langchain"}}'
-  PARSE_EXAMPLE: |
-    function parse_example() {
-      IFS='/' read -r example_dir example_file <<< "$1"
-      echo "$example_dir" "$example_file"
-    }
-    read example_dir example_file < <(parse_example "{{.EXAMPLE}}")
 
 tasks: 
   install:
@@ -16,84 +9,45 @@ tasks:
     cmds:
       - uv sync
  
-  serve:example:
-    desc: Start the example server
+  serve:
+    desc: Start the agent server
     silent: true
     cmds:
       - |
-        {{.PARSE_EXAMPLE}}
-        {{.PYTHON}} src/glean_agent_examples/examples/$example_dir/$example_file"_server".py
+        {{.PYTHON}} -m glean_agent_examples.server
     summary: |
-      Start the server for the specified example.
+      Start the agent server that handles all agent requests.
       
       Usage:
-        task serve:example EXAMPLE=<directory>[/<file>]
-      
-      Example:
-        task serve:example EXAMPLE=langchain/agent
-        task serve:example EXAMPLE=langgraph/custom_agent
-        task serve:example EXAMPLE=langchain  # defaults to agent.py
-        task serve:example  # defaults to langchain/agent  
+        task serve
           
-  run:example:
-    desc: Run the example with a query
+  run:
+    desc: Run an agent with a query
     silent: true
     cmds:
       - |
-        {{.PARSE_EXAMPLE}}
-        {{.PYTHON}} src/glean_agent_examples/examples/$example_dir/$example_file"_runner".py {{.CLI_ARGS}}
+        {{.PYTHON}} -m glean_agent_examples.runner run {{.CLI_ARGS}}
     summary: |
-      Run the example with a query.
+      Run an agent with a query.
       
       Usage:
-        task run:example EXAMPLE=<directory>[/<file>] -- "Your query here"
+        task run -- <agent_name> "Your query here"
       
       Example:
-        task run:example EXAMPLE=langchain/agent -- "What information can you find about AI in Glean?"
-        task run:example EXAMPLE=langgraph/glean_search_retriever -- "what are the company holidays"
-        task run:example EXAMPLE=langchain -- "What information can you find about AI in Glean?"  # defaults to agent
-        task run:example -- "What information can you find about AI in Glean?"  # defaults to langchain/agent
+        task run -- langchain_glean_chat "What information can you find about AI in Glean?"
+        task run -- langgraph_glean_search "what are the company holidays"
   
-  list:examples:
-    desc: List all available examples and how to use them
+  list:
+    desc: List all available agents
     silent: true
     cmds:
       - |
-        # Define colors
-        GREEN="\033[0;32m"
-        YELLOW="\033[0;33m"
-        CYAN="\033[0;36m"
-        BOLD="\033[1m"
-        RESET="\033[0m"
-        
-        echo -e "${BOLD}Available Examples:${RESET}"
-        echo ""
-        for dir in src/glean_agent_examples/examples/*/; do
-          example=$(basename "$dir")
-          echo -e "${CYAN}$example:${RESET}"
-          # Find only files ending with _runner.py
-          find "$dir" -type f -name "*_runner.py" -not -path "*/\.*" -not -path "*/__pycache__/*" | sort | while read file; do
-            # Get filename without extension and truncate _runner part
-            full_filename=$(basename "$file" .py)
-            # Remove _runner suffix
-            base_filename=${full_filename%_runner}
-            echo -e "  ${YELLOW}- $example/$base_filename${RESET}"
-          done
-          echo ""
-        done
-        echo -e "${BOLD}How to use examples:${RESET}"
-        echo -e "${BOLD}-------------------${RESET}"
-        echo -e "To run an example, use the format: ${CYAN}<directory>${RESET}/${YELLOW}<file>${RESET} (without extension)"
-        echo ""
-        echo -e "${BOLD}Examples:${RESET}"
-        echo -e "  task serve:example EXAMPLE=${CYAN}langchain${RESET}/${YELLOW}glean_chat_model${RESET}"
-        echo -e "  task run:example EXAMPLE=${CYAN}langgraph${RESET}/${YELLOW}glean_search_retriever${RESET} -- \"what are the company holidays\""
-        echo ""
+        echo "Available agents:"
+        {{.PYTHON}} -m glean_agent_examples.runner list | grep -v "Available Agents:" | sed 's/^/- /'
     summary: |
-      List all available examples and how to use them.
+      List all available agents.
       
       Usage:
-        task list:examples
+        task list
       
-      This will show all available examples and instructions on how to use them
-      with the EXAMPLE parameter in other tasks.
+      This will show all available agents that can be used with the run task.

@@ -1,19 +1,16 @@
 import os
 from typing import Dict, Any, Type
+from pydantic import BaseModel
 from langchain.agents import AgentExecutor, Tool
 from langchain.agents.format_scratchpad import format_to_openai_function_messages
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
-from langchain_openai import ChatOpenAI
+from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.utils.function_calling import convert_to_openai_function
-from pydantic import BaseModel, Field
+from langchain.tools.convert_to_openai import convert_to_openai_function
 
 from langchain_glean.chat_models import ChatGlean
-from glean_agent_examples.common import BaseExampleServer
-
-
-class GleanChatInput(BaseModel):
-    query: str = Field(description="The question to ask Glean Chat")
+from glean_agent_examples.common import BaseExampleAgent
+from glean_agent_examples.examples.langchain.schemas import GleanChatInput
 
 
 class AgentInput(BaseModel):
@@ -24,16 +21,13 @@ class AgentResponse(BaseModel):
     output: str
 
 
-class LangchainGleanChatExample(BaseExampleServer):
-    """
-    LangChain example using Glean Chat Model.
-    """
+class LangchainChatAgent(BaseExampleAgent):
+    """LangChain example using Glean Chat Model."""
 
     def __init__(self):
-        """Initialize the example."""
         super().__init__(
-            title="Langchain Agent Server with Glean Chat",
-            description="LangChain agent that uses Glean's chat model to answer questions"
+            title="Langchain Agent Protocol Server with Glean Chat",
+            description="Langchain agent that uses Glean's chat model to answer questions"
         )
         
         self.glean_chat = ChatGlean(
@@ -91,54 +85,22 @@ class LangchainGleanChatExample(BaseExampleServer):
             return f"Error querying Glean Chat: {str(e)}"
     
     async def run_agent(self, agent_input: AgentInput) -> Dict[str, Any]:
-        """
-        Run the agent with the given input.
-        
-        Args:
-            agent_input: The input to the agent
-            
-        Returns:
-            The agent's response
-        """
+        """Run the agent with the given input."""
         try:
             result = self.agent_executor.invoke({"input": agent_input.input})
-            return AgentResponse(
-                output=result["output"]
-            )
+            return {"output": result["output"]}
         except Exception as e:
             print(f"Error executing agent: {str(e)}")
-            return AgentResponse(
-                output="I encountered an error while processing your request. Please try again or contact support if the issue persists."
-            )
+            return {"output": "I encountered an error while processing your request. Please try again or contact support if the issue persists."}
     
     def get_input_model(self) -> Type[BaseModel]:
-        """
-        Get the Pydantic model for the agent input.
-        
-        Returns:
-            The Pydantic model class for the agent input
-        """
+        """Get the Pydantic model for the agent input."""
         return AgentInput
     
-    def get_response_model(self) -> Type[BaseModel]:
-        """
-        Get the Pydantic model for the agent response.
-        
-        Returns:
-            The Pydantic model class for the agent response
-        """
-        return AgentResponse
+    def get_response_model(self) -> Type[Dict[str, Any]]:
+        """Get the type for the agent response."""
+        return Dict[str, Any]
     
     def get_required_env_vars(self) -> list[str]:
-        """
-        Get a list of required environment variables.
-        
-        Returns:
-            A list of required environment variable names
-        """
+        """Get a list of required environment variables."""
         return ["GLEAN_SUBDOMAIN", "GLEAN_API_TOKEN", "OPENAI_API_KEY"]
-
-
-if __name__ == "__main__":
-    example = LangchainGleanChatExample()
-    example.start_app()

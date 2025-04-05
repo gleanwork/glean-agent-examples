@@ -4,8 +4,8 @@ from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from langgraph.graph import StateGraph, END
 from pydantic import BaseModel
 
-from langchain_glean.retrievers import GleanSearchRetriever
-from glean_agent_examples.common import BaseExampleServer
+from langchain_glean.chat_models import ChatGlean
+from glean_agent_examples.common import BaseExampleAgent
 
 
 class AgentState(TypedDict):
@@ -23,39 +23,27 @@ class AgentResponse(BaseModel):
     output: str
 
 
-class LangGraphGleanSearchExample(BaseExampleServer):
-    """
-    LangGraph example using Glean Search Retriever.
-    """
+class LangGraphChatAgent(BaseExampleAgent):
+    """LangGraph example using Glean Chat Model."""
 
     def __init__(self):
-        """Initialize the example."""
         super().__init__(
-            title="LangGraph Agent Protocol Server with Glean Search",
-            description="LangGraph agent that uses Glean's search retriever to find information"
+            title="LangGraph Agent Protocol Server with Glean Chat",
+            description="LangGraph agent that uses Glean's chat model to answer questions"
         )
         
-        self.glean_retriever = GleanSearchRetriever()
+        self.glean_chat = ChatGlean(
+            agent_config={"agent": "DEFAULT", "mode": "DEFAULT"}
+        )
         self.agent_graph = self._create_agent_graph()
     
-    def glean_search(self, query: str) -> str:
-        """Search for information in Glean."""
+    def ask_glean_chat(self, query: str) -> str:
+        """Ask a question to Glean's chat model."""
         try:
-            docs = self.glean_retriever.invoke(query)
-            
-            if not docs:
-                return "No relevant documents found in Glean."
-            
-            results_text = "\n\n".join([
-                f"**{doc.metadata.get('title', 'Untitled')}**\n"
-                f"{doc.page_content}\n"
-                f"Source: {doc.metadata.get('url', 'Unknown source')}"
-                for doc in docs
-            ])
-            
-            return f"Found {len(docs)} relevant documents in Glean:\n\n{results_text}"
+            response = self.glean_chat.invoke([HumanMessage(content=query)])
+            return response.content
         except Exception as e:
-            return f"Error searching Glean: {str(e)}"
+            return f"Error querying Glean Chat: {str(e)}"
     
     def _decide_next_step(self, state: AgentState) -> Dict[str, Any]:
         """Decide whether to use a tool or respond."""
@@ -68,7 +56,7 @@ class LangGraphGleanSearchExample(BaseExampleServer):
         
         return {
             "messages": state["messages"],
-            "next": "glean_search_tool", 
+            "next": "glean_chat_tool", 
             "tool_input": query
         }
     
@@ -77,20 +65,20 @@ class LangGraphGleanSearchExample(BaseExampleServer):
         tool_output = state.get("tool_output", None)
         
         if not tool_output:
-            response = AIMessage(content="I couldn't find any relevant information in the company knowledge base. Please try a different query.")
+            response = AIMessage(content="I couldn't get a response from the company knowledge base. Please try a different query.")
         else:
-            response = AIMessage(content=f"Here's what I found in the company knowledge base: {tool_output}")
+            response = AIMessage(content=tool_output)
         
         new_messages = state["messages"] + [response]
         
         return {"messages": new_messages, "next": END}
     
-    def _glean_search_wrapper(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """Wrapper for the glean_search function that returns a dict for the state."""
+    def _glean_chat_wrapper(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """Wrapper for the ask_glean_chat function that returns a dict for the state."""
         query = state.get("tool_input", "")
         
         if isinstance(query, str):
-            result = self.glean_search(query)
+            result = self.ask_glean_chat(query)
         else:
             result = f"Error: Expected string query but got {type(query)}"
         
@@ -101,26 +89,18 @@ class LangGraphGleanSearchExample(BaseExampleServer):
         builder = StateGraph(AgentState)
         
         builder.add_node("decide", self._decide_next_step)
-        builder.add_node("glean_search_tool", self._glean_search_wrapper)
+        builder.add_node("glean_chat_tool", self._glean_chat_wrapper)
         builder.add_node("create_response", self._create_response)
         
-        builder.add_edge("decide", "glean_search_tool")
-        builder.add_edge("glean_search_tool", "create_response")
+        builder.add_edge("decide", "glean_chat_tool")
+        builder.add_edge("glean_chat_tool", "create_response")
         
         builder.set_entry_point("decide")
         
         return builder.compile()
     
     async def run_agent(self, agent_input: AgentInput) -> Dict[str, Any]:
-        """
-        Run the agent with the given input.
-        
-        Args:
-            agent_input: The input to the agent
-            
-        Returns:
-            The agent's response
-        """
+        """Run the agent with the given input."""
         try:
             message = HumanMessage(content=agent_input.input)
             
@@ -149,43 +129,19 @@ class LangGraphGleanSearchExample(BaseExampleServer):
                 print(f"Inner error executing agent: {str(inner_e)}")
                 output = f"I encountered an error processing your request: {str(inner_e)}"
             
-            return AgentResponse(
-                output=output
-            )
+            return {"output": output}
         except Exception as e:
             print(f"Outer error executing agent: {str(e)}")
-            return AgentResponse(
-                output=f"I encountered an error while processing your request: {str(e)}"
-            )
+            return {"output": f"I encountered an error while processing your request: {str(e)}"}
     
     def get_input_model(self) -> Type[BaseModel]:
-        """
-        Get the Pydantic model for the agent input.
-        
-        Returns:
-            The Pydantic model class for the agent input
-        """
+        """Get the Pydantic model for the agent input."""
         return AgentInput
     
-    def get_response_model(self) -> Type[BaseModel]:
-        """
-        Get the Pydantic model for the agent response.
-        
-        Returns:
-            The Pydantic model class for the agent response
-        """
-        return AgentResponse
+    def get_response_model(self) -> Type[Dict[str, Any]]:
+        """Get the type for the agent response."""
+        return Dict[str, Any]
     
     def get_required_env_vars(self) -> list[str]:
-        """
-        Get a list of required environment variables.
-        
-        Returns:
-            A list of required environment variable names
-        """
+        """Get a list of required environment variables."""
         return ["GLEAN_SUBDOMAIN", "GLEAN_API_TOKEN"]
-
-
-if __name__ == "__main__":
-    example = LangGraphGleanSearchExample()
-    example.start_app()

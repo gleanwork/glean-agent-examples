@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from .base_example import BaseExample, IconType
 
 
-class BaseExampleServer(BaseExample, ABC):
+class BaseExampleAgent(BaseExample, ABC):
     """
     Base class for all Glean agent examples.
     
@@ -45,22 +45,16 @@ class BaseExampleServer(BaseExample, ABC):
         self.version = version
         self.host = host
         self.port = port
-        self.app = FastAPI(
-            title=title,
-            description=description,
-            version=version
-        )
         
-        self._setup_routes()
-        
-    def _setup_routes(self) -> None:
-        """
-        Set up the FastAPI routes for this example.
-        """
-        @self.app.post("/runs", response_model=self.get_response_model())
-        async def create_run(agent_input: self.get_input_model()):
-            """Execute the agent with the given input."""
-            return await self.run_agent(agent_input)
+        # Load environment variables if needed
+        if load_env:
+            self._check_environment()
+    
+    def _check_environment(self) -> None:
+        """Check that all required environment variables are set."""
+        missing_vars = self.check_environment()
+        if missing_vars:
+            raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
     
     @abstractmethod
     async def run_agent(self, agent_input: Any) -> Dict[str, Any]:
