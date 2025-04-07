@@ -1,62 +1,50 @@
 # Glean Agent Examples
 
-A collection of examples demonstrating how to integrate Glean with external Agent frameworks.
+Example implementations showing how to integrate AI agent frameworks with Glean to access your company's knowledge base.
 
 ## Overview
 
-This project demonstrates two key integration patterns using both LangChain and LangGraph frameworks:
+This repository demonstrates how to integrate different AI agent frameworks with Glean. These examples show how to:
 
-1. **Glean Search Retriever**: Enabling agents to search and retrieve information from Glean's knowledge base.
-2. **Glean Chat Model**: Allowing agents to interact with Glean's chat capabilities for more conversational responses.
+- Search and retrieve information from your Glean knowledge base
+- Use Glean's chat capabilities for natural language interactions
 
-## Architecture
+## Available Integrations
 
-Each example follows a consistent architecture with two main components:
+### LangChain
 
-### Server Components (`*_server.py`)
+Uses LangChain's built-in Glean integrations:
 
-These files contain the core agent logic and expose a FastAPI server with REST endpoints. They:
+- `GleanSearchRetriever` for semantic search over your knowledge base
+- `ChatGlean` for conversational interactions
+- Example shows both standalone usage and as part of an agent
 
-- Define the agent's behavior and capabilities
-- Set up the necessary tools and models
-- Expose endpoints for interacting with the agent
-- Handle incoming requests and return responses
+### LangGraph
 
-### Runner Components (`*_runner.py`)
+Shows how to build stateful agents with Glean:
 
-These files provide a convenient way to test and interact with the server components. They:
+- Maintains conversation context across interactions
+- Demonstrates workflow control with Glean's search and chat
+- Handles complex multi-step queries
 
-- Validate connectivity to required services (Glean, OpenAI, etc.)
-- Provide a command-line interface for sending queries to the agent
-- Handle error reporting and display results in a user-friendly format
+### OpenAI Assistants
 
-This separation makes it easy to both run the agent as a service and to test it directly from the command line.
+Shows how to use Glean with OpenAI's Assistant framework:
 
-## Prerequisites
+- Uses Glean's MCP server to expose search and chat as Assistant tools
+- Demonstrates function calling with Glean's capabilities
+- Shows how to maintain context in conversations
 
-- Python 3.13+
-- [uv](https://github.com/astral-sh/uv) for Python package management
-- [Go-Task](https://taskfile.dev/) for running commands
-- Glean API credentials
-- OpenAI API key
+## Getting Started
 
-## Setup
+1. **Prerequisites**
+   - Python 3.13+
+   - Glean API credentials (subdomain and API token)
+   - OpenAI API key (for OpenAI and LangChain examples)
 
-1. Clone this repository
-2. Install uv if you haven't already:
+2. **Installation**
 
-   ```bash
-   # macOS with Homebrew
-   brew install uv
-   
-   # Linux/macOS with curl
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   
-   # Windows with pip
-   pip install uv
-   ```
-
-3. Install Go-Task if you haven't already:
+   First, install [Go-Task](https://taskfile.dev/installation/):
 
    ```bash
    # macOS with Homebrew
@@ -69,120 +57,56 @@ This separation makes it easy to both run the agent as a service and to test it 
    scoop install task
    ```
 
-4. Install dependencies:
+   Then install the package and set up your environment:
 
    ```bash
+   # Install dependencies
    task install
+   
+   # Set up environment variables
+   export GLEAN_SUBDOMAIN=your-instance
+   export GLEAN_API_TOKEN=your_token
+   export OPENAI_API_KEY=your_key  # If using OpenAI examples
    ```
 
-   This will run `uv pip install -e .`, which automatically creates a virtual environment and installs the project in development mode.
+3. **Running Examples**
 
-5. Configure your environment variables in `.env`:
+   First, start the server:
 
    ```bash
-   OPENAI_API_KEY=your_openai_api_key
-   GLEAN_SUBDOMAIN=your-instance
-   GLEAN_API_TOKEN=your_glean_api_token
-   # Optional: Act as a specific user for testing
-   GLEAN_ACT_AS=user@example.com
+   # Start the server
+   task serve
    ```
 
-## Running Examples
-
-### Available Examples
-
-To see all available examples and how to use them:
-
-```bash
-task list:examples
-```
-
-This will show you all available examples, along with usage instructions. The examples are organized by framework (LangChain or LangGraph) and functionality (Search Retriever or Chat Model).
-
-### Running an Example
-
-There are two components used to interact with the examples:
-
-#### 1. Start a Server
-
-Start an example server to expose an API endpoint:
-
-```bash
-task serve:example EXAMPLE=langchain/glean_chat_model
-```
-
-This starts a FastAPI server on `localhost:8000` that you can interact with via HTTP requests.
-
-#### 2. Run a Query Directly
-
-Run a query against an example:
-
-```bash
-task run:example EXAMPLE=langgraph/glean_search_retriever -- "What information can you find about AI in Glean?"
-```
-
-This will:
-
-1. First validate connectivity to the Glean API
-2. Send your query to the server
-3. Display the response
-
-### Example Workflow
-
-A typical workflow might look like this:
-
-1. **Explore available examples**:
+   Then in a new terminal, you can run examples:
 
    ```bash
-   task list:examples
+   # List available examples
+   task list
+
+   # Run a specific example
+   task run -- langchain_search "What are our company policies?"
    ```
 
-2. **Start the associated server**:
+   The server will handle requests from multiple examples, so you only need to start it once.
 
-   ```bash
-   task serve:example EXAMPLE=langchain/glean_chat_model
-   ```
+## Architecture
 
-3. **Run a test query**:
+Each example follows a consistent pattern:
 
-   ```bash
-   task run:example EXAMPLE=langchain/glean_chat_model -- "What are the company holidays?"
-   ```
+1. Authenticates with Glean using your credentials
+2. Sets up the agent framework with appropriate tools/capabilities
+3. Handles queries by searching or chatting through Glean
+4. Returns formatted responses
 
-## Components
+The examples are structured to be:
 
-### Framework Implementations
+- Easy to understand and modify
+- Production-ready with proper error handling
+- Maintainable with clear separation of concerns
 
-- **LangChain**: Uses the LangChain framework for building agents
-  - `glean_search_retriever_server.py`: Implements a search retriever using LangChain
-  - `glean_chat_model_server.py`: Implements a chat model using LangChain
+## API Documentation
 
-- **LangGraph**: Uses the LangGraph framework for building agents with state management
-  - `glean_search_retriever_server.py`: Implements a search retriever using LangGraph
-  - `glean_chat_model_server.py`: Implements a chat model using LangGraph
-
-### Core Components
-
-- **BaseExampleServer**: Base class that handles common server functionality
-- **BaseExampleRunner**: Base class that handles common runner functionality
-- **GleanClient**: Client for interacting with the Glean API
-
-## Glean API Integration
-
-This project integrates with two key Glean APIs:
-
-1. **Glean Search API**: Used by the search retriever examples
-
-   - Sends search queries to Glean's search endpoint
-   - Processes the results to extract content and metadata
-   - Converts Glean search results into document objects for agent use
-
-2. **Glean Chat API**: Used by the chat model examples
-
-   - Sends chat queries to Glean's chat endpoint
-   - Leverages Glean's knowledge base for accurate responses
-   - Maintains conversation context for multi-turn interactions
-
-## License
-
-[MIT License](LICENSE)
+- [Glean API Documentation](https://developers.glean.com/docs/)
+- [LangChain Glean Integration](https://python.langchain.com/docs/integrations/retrievers/glean)
+- [OpenAI Assistants API](https://platform.openai.com/docs/assistants/overview)
