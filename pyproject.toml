@@ -2,20 +2,20 @@
 name = "glean-agent-examples"
 version = "0.1.0"
 description = "Proof of concept for Glean-Langchain integration"
-requires-python = ">=3.9"
+requires-python = ">=3.13"
 readme = "README.md"
 dependencies = [
-    "langchain",
-    "langchain_openai",
-    "langgraph",
-    "fastapi",
-    "pydantic",
-    "python-dotenv",
-    "requests",
-    "uvicorn",
-    "openai-agents",
-    "langchain-glean>=0.1.0",
-    "rich",
+  "langchain",
+  "langchain_openai",
+  "langgraph",
+  "fastapi",
+  "pydantic",
+  "python-dotenv",
+  "requests",
+  "uvicorn",
+  "openai-agents",
+  "langchain-glean>=0.1.0",
+  "rich",
 ]
 
 [build-system]

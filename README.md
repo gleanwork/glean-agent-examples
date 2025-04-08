@@ -1,10 +1,10 @@
 # Glean Agent Examples
 
-Example implementations showing how to integrate AI agent frameworks with Glean to access your company's knowledge base.
+Example implementations showing how to use Glean to access your company's knowledge base with common AI agent frameworks.
 
 ## Overview
 
-This repository demonstrates how to integrate different AI agent frameworks with Glean. These examples show how to:
+This repository demonstrates how to integrate Glean with different AI agent frameworks. These examples show how to:
 
 - Search and retrieve information from your Glean knowledge base
 - Use Glean's chat capabilities for natural language interactions
@@ -37,37 +37,54 @@ Shows how to use Glean with OpenAI's Assistant framework:
 
 ## Getting Started
 
+In order to setup and run these examples, follow these steps:
+
 1. **Prerequisites**
+
    - Python 3.13+
-   - Glean API credentials (subdomain and API token)
+   - [Glean API credentials](https://developers.glean.com/indexing/authentication/managing-tokens#managing-tokens) (subdomain and API token with the `chat` and `search` scopes)
    - OpenAI API key (for OpenAI and LangChain examples)
 
 2. **Installation**
 
-   First, install [Go-Task](https://taskfile.dev/installation/):
+   - install [Go-Task](https://taskfile.dev/installation/):
 
-   ```bash
-   # macOS with Homebrew
-   brew install go-task/tap/go-task
-   
-   # Linux/macOS with curl
-   sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
-   
-   # Windows with Scoop
-   scoop install task
-   ```
+     ```bash
+     # macOS with Homebrew
+     brew install go-task/tap/go-task
 
-   Then install the package and set up your environment:
+     # Linux/macOS with curl
+     sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
 
-   ```bash
-   # Install dependencies
-   task install
-   
-   # Set up environment variables
-   export GLEAN_SUBDOMAIN=your-instance
-   export GLEAN_API_TOKEN=your_token
-   export OPENAI_API_KEY=your_key  # If using OpenAI examples
-   ```
+     # Windows with Scoop
+     scoop install task
+     ```
+
+   - install [uv](https://docs.astral.sh/uv/getting-started/installation/)
+
+     ```bash
+     # macOS with Homebrew
+     brew install uv
+
+     # Linux/macOS with curl
+     curl -LsSf https://astral.sh/uv/install.sh | sh
+
+     # Windows
+     powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+     ```
+
+   - Then install the package and set up your environment:
+
+     ```bash
+     # install dependencies
+     task install
+
+     # set up environment variables
+
+     export GLEAN_SUBDOMAIN=your-instance
+     export GLEAN_API_TOKEN=your_token
+     export OPENAI_API_KEY=your_key  # If using OpenAI examples
+     ```
 
 3. **Running Examples**
 
